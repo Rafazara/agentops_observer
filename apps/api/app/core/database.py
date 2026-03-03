@@ -6,13 +6,13 @@ All queries use raw SQL for maximum performance and control.
 """
 
 import asyncio
+import os
+import ssl
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator
 
 import asyncpg
 import structlog
-
-from app.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -29,12 +29,14 @@ class Database:
         """Initialize database manager."""
         self._pool: asyncpg.Pool | None = None
         self._lock = asyncio.Lock()
+        self.database_url = os.getenv("DATABASE_URL")
     
     async def connect(self) -> None:
         """
         Create and configure the connection pool.
         
         Should be called during application startup.
+        Uses SSL context for secure Supabase connections.
         """
         if self._pool is not None:
             return
@@ -43,26 +45,43 @@ class Database:
             if self._pool is not None:
                 return
             
+            if not self.database_url:
+                raise RuntimeError("DATABASE_URL environment variable is not set")
+            
+            # Mask password for logging
+            masked_url = self.database_url
+            if "@" in masked_url:
+                parts = masked_url.split("@")
+                if ":" in parts[0]:
+                    cred_parts = parts[0].rsplit(":", 1)
+                    masked_url = f"{cred_parts[0]}:****@{parts[1]}"
+            
             logger.info(
-                "Connecting to database",
-                host=settings.postgres_host,
-                port=settings.postgres_port,
-                database=settings.postgres_db,
+                "Attempting database connection",
+                url=masked_url,
             )
             
-            self._pool = await asyncpg.create_pool(
-                host=settings.postgres_host,
-                port=settings.postgres_port,
-                user=settings.postgres_user,
-                password=settings.postgres_password,
-                database=settings.postgres_db,
-                min_size=2,
-                max_size=settings.postgres_pool_size,
-                max_inactive_connection_lifetime=300,
-                command_timeout=60,
-            )
-            
-            logger.info("Database connection pool created")
+            try:
+                # Create SSL context for secure connection
+                ssl_context = ssl.create_default_context()
+                
+                self._pool = await asyncpg.create_pool(
+                    self.database_url,
+                    ssl=ssl_context,
+                    min_size=1,
+                    max_size=5,
+                    command_timeout=60,
+                )
+                
+                logger.info("Database connection established successfully")
+                
+            except Exception as e:
+                logger.error(
+                    "Database connection failed",
+                    error=str(e),
+                    error_type=type(e).__name__,
+                )
+                raise RuntimeError(f"Failed to connect to database: {e}") from e
     
     async def disconnect(self) -> None:
         """

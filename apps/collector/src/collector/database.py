@@ -2,6 +2,7 @@
 Database connection pool for the Collector service.
 """
 
+import ssl
 import asyncpg
 import structlog
 from contextlib import asynccontextmanager
@@ -21,14 +22,25 @@ async def init_db() -> None:
     
     settings = get_settings()
     
-    _pool = await asyncpg.create_pool(
-        settings.database_url,
-        min_size=settings.database_pool_min,
-        max_size=settings.database_pool_max,
-        command_timeout=60,
-    )
+    logger.info("Attempting database connection...")
     
-    logger.info("Database pool initialized")
+    try:
+        # Create SSL context for secure connection
+        ssl_context = ssl.create_default_context()
+        
+        _pool = await asyncpg.create_pool(
+            settings.database_url,
+            ssl=ssl_context,
+            min_size=settings.database_pool_min,
+            max_size=settings.database_pool_max,
+            command_timeout=60,
+        )
+        
+        logger.info("Database pool initialized successfully")
+        
+    except Exception as e:
+        logger.error("Database connection failed", error=str(e))
+        raise RuntimeError(f"Failed to connect to database: {e}") from e
 
 
 async def close_db() -> None:

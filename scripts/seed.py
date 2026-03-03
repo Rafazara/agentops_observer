@@ -15,6 +15,7 @@ Usage:
 import asyncio
 import os
 import random
+import ssl
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -103,8 +104,14 @@ INCIDENT_TITLES = [
 
 
 async def create_pool() -> asyncpg.Pool:
-    """Create database connection pool."""
-    return await asyncpg.create_pool(DATABASE_URL, min_size=2, max_size=10)
+    """Create database connection pool with SSL."""
+    ssl_context = ssl.create_default_context()
+    return await asyncpg.create_pool(
+        DATABASE_URL,
+        ssl=ssl_context,
+        min_size=2,
+        max_size=10,
+    )
 
 
 async def seed_organizations(conn: asyncpg.Connection) -> list[uuid.UUID]:
