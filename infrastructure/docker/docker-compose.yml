@@ -1,0 +1,175 @@
+# AgentOps Observer - Docker Compose for Local Development
+# Includes: PostgreSQL + TimescaleDB, Redis, Redpanda (Kafka)
+
+version: "3.8"
+
+services:
+  # ============================================================================
+  # PostgreSQL + TimescaleDB
+  # ============================================================================
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    container_name: agentops-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-agentops}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-agentops_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-agentops}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-agentops} -d ${POSTGRES_DB:-agentops}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - agentops-network
+
+  # ============================================================================
+  # Redis - Caching and Session Management
+  # ============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: agentops-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - agentops-network
+
+  # ============================================================================
+  # Redpanda (Kafka-compatible) - Event Streaming
+  # ============================================================================
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.1.1
+    container_name: agentops-redpanda
+    restart: unless-stopped
+    command:
+      - redpanda
+      - start
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+      - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18082
+      - --advertise-pandaproxy-addr internal://redpanda:8082,external://localhost:18082
+      - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:18081
+      - --rpc-addr redpanda:33145
+      - --advertise-rpc-addr redpanda:33145
+      - --mode dev-container
+      - --smp 1
+      - --memory 512M
+      - --reserve-memory 0M
+      - --default-log-level=warn
+    ports:
+      - "18081:18081" # Schema Registry
+      - "18082:18082" # REST Proxy
+      - "19092:19092" # Kafka API
+      - "9644:9644" # Admin API
+    volumes:
+      - redpanda_data:/var/lib/redpanda/data
+    healthcheck:
+      test:
+        ["CMD-SHELL", "rpk cluster health | grep -E 'Healthy.*true' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    networks:
+      - agentops-network
+
+  # ============================================================================
+  # Redpanda Console - Kafka UI (Optional but helpful)
+  # ============================================================================
+  redpanda-console:
+    image: docker.redpanda.com/redpandadata/console:v2.4.5
+    container_name: agentops-redpanda-console
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      CONFIG_FILEPATH: /etc/redpanda/redpanda-console-config.yaml
+    volumes:
+      - ./redpanda-console-config.yaml:/etc/redpanda/redpanda-console-config.yaml:ro
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    networks:
+      - agentops-network
+
+  # ============================================================================
+  # Topic Initialization
+  # ============================================================================
+  redpanda-init:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.1.1
+    container_name: agentops-redpanda-init
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    entrypoint: /bin/bash
+    command: |
+      -c "
+        echo 'Creating Kafka topics...'
+        
+        rpk topic create agentops.events.raw \
+          --brokers redpanda:9092 \
+          --partitions 12 \
+          --replicas 1 \
+          --config retention.ms=604800000 \
+          --config compression.type=zstd
+        
+        rpk topic create agentops.events.processed \
+          --brokers redpanda:9092 \
+          --partitions 12 \
+          --replicas 1 \
+          --config retention.ms=604800000 \
+          --config compression.type=zstd
+        
+        rpk topic create agentops.executions.completed \
+          --brokers redpanda:9092 \
+          --partitions 6 \
+          --replicas 1 \
+          --config retention.ms=604800000 \
+          --config compression.type=zstd
+        
+        rpk topic create agentops.incidents.created \
+          --brokers redpanda:9092 \
+          --partitions 3 \
+          --replicas 1 \
+          --config retention.ms=604800000
+        
+        rpk topic create agentops.dlq \
+          --brokers redpanda:9092 \
+          --partitions 3 \
+          --replicas 1 \
+          --config retention.ms=2592000000
+        
+        echo 'Topics created successfully!'
+        rpk topic list --brokers redpanda:9092
+      "
+    networks:
+      - agentops-network
+
+networks:
+  agentops-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  redpanda_data:
+    driver: local

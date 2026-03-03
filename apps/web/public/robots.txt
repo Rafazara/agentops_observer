@@ -1,0 +1,17 @@
+# AgentOps Observer - Robots.txt
+# https://www.robotstxt.org/
+
+User-agent: *
+Disallow: /api/
+Disallow: /settings
+Disallow: /executions/
+Disallow: /incidents/
+Disallow: /compliance
+Allow: /
+Allow: /pricing
+Allow: /onboarding
+Allow: /login
+Allow: /register
+
+# Sitemap
+Sitemap: https://agentops-observer.vercel.app/sitemap.xml

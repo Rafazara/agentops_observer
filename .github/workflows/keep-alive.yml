@@ -1,0 +1,57 @@
+# GitHub Actions Workflow: Keep Render.com Service Warm
+# Runs every 14 minutes to prevent the free tier service from sleeping
+
+name: Keep Alive
+
+on:
+    schedule:
+        # Run every 14 minutes (Render sleeps after 15 min inactivity)
+        - cron: "*/14 * * * *"
+
+    # Allow manual trigger
+    workflow_dispatch:
+
+jobs:
+    ping:
+        name: Ping API
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Ping Render API
+              run: |
+                  echo "Pinging API at $(date -u)"
+
+                  # Try up to 3 times with 10 second delay between attempts
+                  for attempt in 1 2 3; do
+                    echo "Attempt $attempt/3..."
+                    
+                    response=$(curl -s -w "\n%{http_code}" \
+                      --max-time 60 \
+                      "${{ secrets.API_URL }}/ping" \
+                      -H "User-Agent: GitHub-Actions-KeepAlive" || true)
+                    
+                    status_code=$(echo "$response" | tail -n1)
+                    body=$(echo "$response" | sed '$d')
+                    
+                    echo "Response: $body"
+                    echo "Status: $status_code"
+                    
+                    if [ "$status_code" = "200" ]; then
+                      echo "✓ Ping successful!"
+                      exit 0
+                    fi
+                    
+                    echo "✗ Ping failed, waiting 10 seconds..."
+                    sleep 10
+                  done
+
+                  echo "⚠ All attempts failed - service may need manual check"
+                  # Don't fail the workflow - cold starts are expected on free tier
+                  exit 0
+
+# Setup Instructions:
+# 1. Go to your GitHub repository → Settings → Secrets and variables → Actions
+# 2. Add a new repository secret:
+#    - Name: API_URL
+#    - Value: https://your-app.onrender.com
+# 3. The workflow will run automatically every 14 minutes

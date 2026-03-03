@@ -1,0 +1,63 @@
+# Render.com Blueprint Configuration
+# Deploy command: Connect GitHub repo to Render Dashboard
+# Free tier: 750 hours/month, sleeps after 15 min inactivity
+
+services:
+  # ==========================================================================
+  # API Service (FastAPI)
+  # ==========================================================================
+  - type: web
+    name: agentops-api
+    runtime: docker
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: ./apps/api
+    region: oregon  # Closest to most users, free tier available
+    plan: free
+    
+    # Health check configuration
+    healthCheckPath: /ping
+    
+    # Environment variables (set in Render Dashboard)
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      
+      # Supabase PostgreSQL (set these in Render Dashboard)
+      - key: POSTGRES_HOST
+        sync: false
+      - key: POSTGRES_PORT
+        value: "5432"
+      - key: POSTGRES_DB
+        sync: false
+      - key: POSTGRES_USER
+        sync: false
+      - key: POSTGRES_PASSWORD
+        sync: false
+      
+      # Upstash Redis (set these in Render Dashboard)
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
+      
+      # JWT Secret (generate with: openssl rand -hex 32)
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      
+      # Optional: Anthropic for semantic analysis
+      - key: ANTHROPIC_API_KEY
+        sync: false
+
+# Note: Render free tier limitations:
+# - Services sleep after 15 minutes of inactivity
+# - Cold start takes ~30 seconds
+# - 750 free hours per month (enough for 1 service 24/7)
+# 
+# To keep the service warm, use an external cron service like:
+# - cron-job.org (free)
+# - UptimeRobot (free)
+# - GitHub Actions scheduled workflow
+#
+# Set up a cron job to ping https://your-app.onrender.com/ping every 14 minutes

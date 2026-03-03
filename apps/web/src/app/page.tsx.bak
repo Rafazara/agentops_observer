@@ -1,0 +1,873 @@
+"use client";
+
+import { useState, useEffect, useMemo } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { formatDuration } from "@/lib/utils";
+import {
+  Activity,
+  AlertTriangle,
+  Bot,
+  CheckCircle2,
+  DollarSign,
+  TrendingDown,
+  TrendingUp,
+  ArrowUpRight,
+  Zap,
+  CircleDot,
+} from "lucide-react";
+import { Sidebar } from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
+import { CountUpNumber, CountUpCurrency } from "@/components/ui/count-up";
+import { StatusBadge, SeverityBadge } from "@/components/ui/status-badge";
+import { RelativeTime } from "@/components/ui/relative-time";
+import { DashboardSkeleton } from "@/components/ui/skeleton";
+import { QualityScore } from "@/components/ui/circular-progress";
+import { cn } from "@/lib/utils";
+import {
+  AreaChart,
+  Area,
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+} from "recharts";
+
+// ============================================================================
+// MOCK DATA
+// ============================================================================
+
+const metrics = {
+  active_agents: 12,
+  running_now: 4,
+  executions_today: 1847,
+  success_rate: 94.5,
+  executions_yesterday: 1648,
+  cost_today: 127.43,
+  cost_month: 2847.89,
+  budget_month: 5000,
+  open_incidents: 3,
+  critical_incidents: 1,
+  warning_incidents: 2,
+};
+
+// Last 24h activity data for sparkline
+const activityData24h = Array.from({ length: 24 }, (_, i) => ({
+  hour: i,
+  value: Math.floor(40 + Math.random() * 60),
+}));
+
+// Last 12 hours for bar chart
+const executionsByHour = Array.from({ length: 12 }, (_, i) => ({
+  hour: `${(12 + i) % 24}:00`,
+  success: Math.floor(100 + Math.random() * 80),
+  failed: Math.floor(Math.random() * 15),
+}));
+
+// 7-day execution volume
+const executionVolume7d = [
+  { day: "Mon", executions: 1234, cost: 89.5 },
+  { day: "Tue", executions: 1456, cost: 102.3 },
+  { day: "Wed", executions: 1678, cost: 118.7 },
+  { day: "Thu", executions: 1234, cost: 95.2 },
+  { day: "Fri", executions: 1890, cost: 134.5 },
+  { day: "Sat", executions: 967, cost: 68.2 },
+  { day: "Sun", executions: 1123, cost: 79.8 },
+];
+
+// Cost by project
+const costByProject = [
+  { name: "Customer Support", value: 845.2, color: "#3b82f6" },
+  { name: "Data Pipeline", value: 623.4, color: "#8b5cf6" },
+  { name: "Code Review", value: 412.8, color: "#06b6d4" },
+  { name: "Research", value: 387.1, color: "#10b981" },
+  { name: "Other", value: 579.39, color: "#6b7280" },
+];
+
+// Live execution feed
+const liveExecutions = [
+  {
+    id: "exec-001",
+    agent_name: "Customer Support Bot",
+    task: "Handle ticket #4521 - Refund request",
+    status: "completed",
+    duration_ms: 1250,
+    started_at: new Date(Date.now() - 15 * 1000).toISOString(),
+    cost: 0.0124,
+    quality_score: 92,
+    framework: "langchain",
+  },
+  {
+    id: "exec-002",
+    agent_name: "Data Analysis Agent",
+    task: "Generate Q4 revenue report from sales data",
+    status: "running",
+    duration_ms: 45000,
+    started_at: new Date(Date.now() - 45 * 1000).toISOString(),
+    cost: 0.0856,
+    quality_score: 88,
+    framework: "openai",
+  },
+  {
+    id: "exec-003",
+    agent_name: "Code Review Bot",
+    task: "Review PR #892 - Add user authentication",
+    status: "completed",
+    duration_ms: 3200,
+    started_at: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+    cost: 0.0234,
+    quality_score: 95,
+    framework: "anthropic",
+  },
+  {
+    id: "exec-004",
+    agent_name: "Email Assistant",
+    task: "Draft response to vendor inquiry",
+    status: "failed",
+    duration_ms: 890,
+    started_at: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
+    cost: 0.0045,
+    quality_score: 0,
+    framework: "openai",
+  },
+  {
+    id: "exec-005",
+    agent_name: "Research Agent",
+    task: "Competitive analysis for product launch",
+    status: "completed",
+    duration_ms: 12500,
+    started_at: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+    cost: 0.1567,
+    quality_score: 87,
+    framework: "langchain",
+  },
+  {
+    id: "exec-006",
+    agent_name: "Customer Support Bot",
+    task: "FAQ response - Shipping times",
+    status: "completed",
+    duration_ms: 820,
+    started_at: new Date(Date.now() - 6 * 60 * 1000).toISOString(),
+    cost: 0.0067,
+    quality_score: 98,
+    framework: "langchain",
+  },
+  {
+    id: "exec-007",
+    agent_name: "Data Analysis Agent",
+    task: "Extract KPIs from marketing campaign",
+    status: "completed",
+    duration_ms: 8900,
+    started_at: new Date(Date.now() - 8 * 60 * 1000).toISOString(),
+    cost: 0.0445,
+    quality_score: 91,
+    framework: "openai",
+  },
+  {
+    id: "exec-008",
+    agent_name: "Code Review Bot",
+    task: "Review PR #891 - Database migrations",
+    status: "completed",
+    duration_ms: 4100,
+    started_at: new Date(Date.now() - 12 * 60 * 1000).toISOString(),
+    cost: 0.0312,
+    quality_score: 89,
+    framework: "anthropic",
+  },
+];
+
+// Agent health data
+const agentHealth = [
+  {
+    name: "Customer Support Bot",
+    framework: "langchain",
+    health: "healthy",
+    last_execution: new Date(Date.now() - 15 * 1000).toISOString(),
+    last_status: "completed",
+    cost_today: 45.67,
+    sparkline: [45, 52, 48, 61, 55, 58, 62],
+  },
+  {
+    name: "Data Analysis Agent",
+    framework: "openai",
+    health: "healthy",
+    last_execution: new Date(Date.now() - 45 * 1000).toISOString(),
+    last_status: "running",
+    cost_today: 32.12,
+    sparkline: [30, 35, 42, 38, 41, 45, 40],
+  },
+  {
+    name: "Code Review Bot",
+    framework: "anthropic",
+    health: "healthy",
+    last_execution: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+    last_status: "completed",
+    cost_today: 18.45,
+    sparkline: [15, 18, 22, 19, 21, 17, 20],
+  },
+  {
+    name: "Email Assistant",
+    framework: "openai",
+    health: "degraded",
+    last_execution: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
+    last_status: "failed",
+    cost_today: 8.23,
+    sparkline: [12, 10, 8, 6, 9, 7, 5],
+  },
+  {
+    name: "Research Agent",
+    framework: "langchain",
+    health: "healthy",
+    last_execution: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+    last_status: "completed",
+    cost_today: 23.45,
+    sparkline: [20, 25, 28, 32, 30, 27, 25],
+  },
+];
+
+// Recent incidents
+const recentIncidents = [
+  {
+    id: "inc-001",
+    title: "High error rate on Email Assistant",
+    severity: "critical",
+    created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "inc-002",
+    title: "Latency spike on Research Agent",
+    severity: "warning",
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "inc-003",
+    title: "Cost anomaly detected",
+    severity: "warning",
+    created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "inc-004",
+    title: "Rate limit approaching for OpenAI",
+    severity: "low",
+    created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "inc-005",
+    title: "Degraded performance on Customer Support",
+    severity: "low",
+    created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
+// ============================================================================
+// COMPONENTS
+// ============================================================================
+
+function MiniSparkline({ data, color = "#3b82f6", height = 24 }: { data: number[]; color?: string; height?: number }) {
+  const chartData = data.map((value, i) => ({ i, value }));
+  return (
+    <ResponsiveContainer width="100%" height={height}>
+      <LineChart data={chartData}>
+        <Line
+          type="monotone"
+          dataKey="value"
+          stroke={color}
+          strokeWidth={1.5}
+          dot={false}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}
+
+function MiniBarChart({ data }: { data: typeof executionsByHour }) {
+  return (
+    <ResponsiveContainer width="100%" height={32}>
+      <BarChart data={data} barGap={2}>
+        <Bar dataKey="success" fill="#10b981" radius={[2, 2, 0, 0]} />
+        <Bar dataKey="failed" fill="#ef4444" radius={[2, 2, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function FrameworkBadge({ framework }: { framework: string }) {
+  const config: Record<string, { label: string; icon: string; color: string }> = {
+    langchain: { label: "LangChain", icon: "🦜", color: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
+    openai: { label: "OpenAI", icon: "◯", color: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
+    anthropic: { label: "Anthropic", icon: "◈", color: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
+  };
+  const { label, icon, color } = config[framework] || { label: framework, icon: "⚡", color: "bg-muted text-muted-foreground" };
+  
+  return (
+    <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] border font-medium", color)}>
+      <span>{icon}</span>
+      {label}
+    </span>
+  );
+}
+
+function HealthDot({ health }: { health: string }) {
+  const colors: Record<string, string> = {
+    healthy: "bg-emerald-500",
+    degraded: "bg-amber-500",
+    critical: "bg-red-500",
+  };
+  const pulseColors: Record<string, string> = {
+    healthy: "bg-emerald-500",
+    degraded: "bg-amber-500",
+    critical: "bg-red-500",
+  };
+  
+  return (
+    <span className="relative flex h-2.5 w-2.5">
+      {health !== "healthy" && (
+        <span className={cn("absolute inline-flex h-full w-full animate-ping rounded-full opacity-75", pulseColors[health])} />
+      )}
+      <span className={cn("relative inline-flex h-2.5 w-2.5 rounded-full", colors[health])} />
+    </span>
+  );
+}
+
+// ============================================================================
+// MAIN DASHBOARD
+// ============================================================================
+
+export default function DashboardPage() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [recentAgentPulse, setRecentAgentPulse] = useState<string | null>(null);
+
+  // Simulate loading
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Simulate agent pulse effect when new execution comes in
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const randomAgent = agentHealth[Math.floor(Math.random() * agentHealth.length)];
+      setRecentAgentPulse(randomAgent.name);
+      setTimeout(() => setRecentAgentPulse(null), 1500);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const executionChange = useMemo(() => {
+    const change = ((metrics.executions_today - metrics.executions_yesterday) / metrics.executions_yesterday) * 100;
+    return { value: Math.abs(change).toFixed(1), positive: change >= 0 };
+  }, []);
+
+  const budgetPercentage = (metrics.cost_month / metrics.budget_month) * 100;
+  const budgetStatus = budgetPercentage >= 90 ? "critical" : budgetPercentage >= 75 ? "warning" : "ok";
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen">
+        <Sidebar />
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <Header />
+          <main className="flex-1 overflow-auto p-6">
+            <DashboardSkeleton />
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-screen">
+      <Sidebar />
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <Header />
+        <main className="flex-1 overflow-auto p-5">
+          <div className="space-y-5 animate-fade-in">
+            {/* Page header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-xl font-semibold tracking-tight">Mission Control</h1>
+                <p className="text-xs text-muted-foreground">
+                  Real-time overview of your AI agent fleet
+                </p>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                </span>
+                Live
+              </div>
+            </div>
+
+            {/* ================================================================ */}
+            {/* TOP SECTION — Hero metrics row (4 cards) */}
+            {/* ================================================================ */}
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+              {/* Card 1: Active Agents */}
+              <Card className="metric-card animate-fade-in-up stagger-1">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Active Agents
+                    </span>
+                    <Bot className="h-4 w-4 text-muted-foreground/50" />
+                  </div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-3xl font-semibold tabular-nums">
+                      <CountUpNumber value={metrics.active_agents} />
+                    </span>
+                    <div className="flex gap-1">
+                      {Array.from({ length: Math.min(metrics.running_now, 5) }).map((_, i) => (
+                        <span key={i} className="relative flex h-2 w-2">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" style={{ animationDelay: `${i * 200}ms` }} />
+                          <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="h-6 mb-2">
+                    <MiniSparkline data={activityData24h.map(d => d.value)} color="#10b981" />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    <span className="text-emerald-500 font-medium">{metrics.running_now} running</span> now
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Card 2: Executions Today */}
+              <Card className="metric-card animate-fade-in-up stagger-2">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Executions Today
+                    </span>
+                    <Activity className="h-4 w-4 text-muted-foreground/50" />
+                  </div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-3xl font-semibold tabular-nums">
+                      <CountUpNumber value={metrics.executions_today} />
+                    </span>
+                    <span className="inline-flex items-center rounded border-l-2 border-l-emerald-500 bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-500">
+                      {metrics.success_rate}%
+                    </span>
+                  </div>
+                  <div className="h-8 mb-2">
+                    <MiniBarChart data={executionsByHour} />
+                  </div>
+                  <div className="flex items-center gap-1 text-xs">
+                    {executionChange.positive ? (
+                      <>
+                        <TrendingUp className="h-3 w-3 text-emerald-500" />
+                        <span className="text-emerald-500 tabular-nums">+{executionChange.value}%</span>
+                      </>
+                    ) : (
+                      <>
+                        <TrendingDown className="h-3 w-3 text-red-500" />
+                        <span className="text-red-500 tabular-nums">-{executionChange.value}%</span>
+                      </>
+                    )}
+                    <span className="text-muted-foreground">vs yesterday</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Card 3: Cost Today / This Month */}
+              <Card className="metric-card animate-fade-in-up stagger-3">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Cost Today / Month
+                    </span>
+                    <DollarSign className="h-4 w-4 text-muted-foreground/50" />
+                  </div>
+                  <div className="mb-2">
+                    <span className="text-3xl font-semibold tabular-nums">
+                      <CountUpCurrency value={metrics.cost_today} />
+                    </span>
+                    <span className="text-sm text-muted-foreground ml-2">
+                      / $<CountUpNumber value={Math.round(metrics.cost_month)} />
+                    </span>
+                  </div>
+                  <div className="space-y-1.5 mb-2">
+                    <div className="h-1.5 bg-muted/50 rounded-full overflow-hidden">
+                      <div
+                        className={cn(
+                          "h-full rounded-full transition-all duration-500",
+                          budgetStatus === "critical" ? "bg-red-500" :
+                          budgetStatus === "warning" ? "bg-amber-500" : "bg-emerald-500"
+                        )}
+                        style={{ width: `${Math.min(budgetPercentage, 100)}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <span className="tabular-nums">${metrics.cost_month.toFixed(0)} spent</span>
+                      <span className="tabular-nums">${metrics.budget_month.toFixed(0)} budget</span>
+                    </div>
+                  </div>
+                  <div className={cn(
+                    "text-xs flex items-center gap-1",
+                    budgetStatus === "critical" ? "text-red-500" :
+                    budgetStatus === "warning" ? "text-amber-500" : "text-emerald-500"
+                  )}>
+                    {budgetStatus === "ok" ? (
+                      <>
+                        <CheckCircle2 className="h-3 w-3" />
+                        On track
+                      </>
+                    ) : (
+                      <>
+                        <AlertTriangle className="h-3 w-3" />
+                        {budgetPercentage.toFixed(0)}% of budget used
+                      </>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Card 4: Open Incidents */}
+              <Card className={cn(
+                "metric-card animate-fade-in-up stagger-4",
+                metrics.critical_incidents > 0 && "border-red-500/30"
+              )}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Open Incidents
+                    </span>
+                    <AlertTriangle className={cn(
+                      "h-4 w-4",
+                      metrics.critical_incidents > 0 ? "text-red-500" : "text-muted-foreground/50"
+                    )} />
+                  </div>
+                  {metrics.open_incidents === 0 ? (
+                    <>
+                      <div className="flex items-center gap-2 mb-3">
+                        <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+                        <span className="text-2xl font-semibold text-emerald-500">All Clear</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">No active incidents</p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-3xl font-semibold tabular-nums">
+                          <CountUpNumber value={metrics.open_incidents} />
+                        </span>
+                        {metrics.critical_incidents > 0 && (
+                          <span className="relative flex h-3 w-3">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
+                            <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500" />
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-1 text-xs">
+                        {metrics.critical_incidents > 0 && (
+                          <span className="inline-flex items-center rounded border-l-2 border-l-red-500 bg-red-500/10 px-2 py-0.5 text-red-500 font-medium">
+                            {metrics.critical_incidents} critical
+                          </span>
+                        )}
+                        {metrics.warning_incidents > 0 && (
+                          <span className="inline-flex items-center rounded border-l-2 border-l-amber-500 bg-amber-500/10 px-2 py-0.5 text-amber-500 font-medium">
+                            {metrics.warning_incidents} warning
+                          </span>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* ================================================================ */}
+            {/* MIDDLE SECTION — Two columns */}
+            {/* ================================================================ */}
+            <div className="grid gap-4 lg:grid-cols-5">
+              {/* Left (60%): Live Execution Feed */}
+              <Card className="lg:col-span-3 card-hover animate-fade-in-up stagger-5">
+                <CardHeader className="pb-2 pt-4 px-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                      <span className="relative flex h-2 w-2">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                      </span>
+                      Live Activity
+                    </CardTitle>
+                    <a href="/executions" className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
+                      View all <ArrowUpRight className="h-3 w-3" />
+                    </a>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0 px-2 pb-2">
+                  <div className="space-y-0.5 max-h-[380px] overflow-auto">
+                    {liveExecutions.map((exec, index) => (
+                      <div
+                        key={exec.id}
+                        className={cn(
+                          "flex items-center justify-between rounded-md px-3 py-2 table-row-hover cursor-pointer animate-fade-in-up",
+                          `stagger-${Math.min(index + 1, 6)}`
+                        )}
+                      >
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <StatusBadge status={exec.status} showDot />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-medium truncate">{exec.agent_name}</p>
+                              <FrameworkBadge framework={exec.framework} />
+                            </div>
+                            <p className="text-xs text-muted-foreground truncate max-w-[260px]">
+                              {exec.task}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <p className="text-xs font-mono tabular-nums text-muted-foreground">
+                              ${exec.cost.toFixed(4)}
+                            </p>
+                            <RelativeTime date={exec.started_at} className="text-[10px]" />
+                          </div>
+                          {exec.status !== "failed" && (
+                            <QualityScore score={exec.quality_score} size={28} />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Right (40%): Agent Health Grid */}
+              <Card className="lg:col-span-2 card-hover animate-fade-in-up stagger-6">
+                <CardHeader className="pb-2 pt-4 px-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                      <CircleDot className="h-4 w-4 text-muted-foreground" />
+                      Agent Health
+                    </CardTitle>
+                    <a href="/agents" className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
+                      View all <ArrowUpRight className="h-3 w-3" />
+                    </a>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0 px-2 pb-2">
+                  <div className="space-y-1">
+                    {agentHealth.map((agent, index) => (
+                      <div
+                        key={agent.name}
+                        className={cn(
+                          "rounded-md border border-border/50 p-3 transition-all cursor-pointer table-row-hover animate-fade-in-up",
+                          `stagger-${Math.min(index + 1, 6)}`,
+                          recentAgentPulse === agent.name && "ring-2 ring-primary/50 ring-offset-2 ring-offset-background"
+                        )}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <HealthDot health={agent.health} />
+                            <span className="text-sm font-medium">{agent.name}</span>
+                          </div>
+                          <FrameworkBadge framework={agent.framework} />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="text-xs text-muted-foreground">
+                            <RelativeTime date={agent.last_execution} /> — {" "}
+                            <span className={cn(
+                              agent.last_status === "completed" && "text-emerald-500",
+                              agent.last_status === "failed" && "text-red-500",
+                              agent.last_status === "running" && "text-blue-500"
+                            )}>
+                              {agent.last_status === "completed" ? "Success" : 
+                               agent.last_status === "failed" ? "Failed" : "Running"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="w-14 h-5">
+                              <MiniSparkline 
+                                data={agent.sparkline} 
+                                color={agent.health === "healthy" ? "#10b981" : agent.health === "degraded" ? "#f59e0b" : "#ef4444"}
+                                height={20}
+                              />
+                            </div>
+                            <span className="text-xs font-mono tabular-nums text-muted-foreground">
+                              ${agent.cost_today.toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* ================================================================ */}
+            {/* BOTTOM SECTION — Three columns */}
+            {/* ================================================================ */}
+            <div className="grid gap-4 md:grid-cols-3">
+              {/* Left: Cost by Project (Donut chart) */}
+              <Card className="card-hover animate-fade-in-up stagger-6">
+                <CardHeader className="pb-2 pt-4 px-4">
+                  <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    Cost by Project
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0 px-4 pb-4">
+                  <div className="flex items-center justify-center h-40">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={costByProject}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={45}
+                          outerRadius={65}
+                          paddingAngle={2}
+                          dataKey="value"
+                        >
+                          {costByProject.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              const data = payload[0].payload;
+                              return (
+                                <div className="rounded-md border bg-popover px-3 py-2 text-xs shadow-md">
+                                  <p className="font-medium">{data.name}</p>
+                                  <p className="text-muted-foreground">${data.value.toFixed(2)}</p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="space-y-1.5 mt-2">
+                    {costByProject.slice(0, 4).map((project) => (
+                      <div key={project.name} className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: project.color }} />
+                          <span className="text-muted-foreground">{project.name}</span>
+                        </div>
+                        <span className="font-mono tabular-nums">${project.value.toFixed(0)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Center: Execution Volume 7d (Area chart) */}
+              <Card className="card-hover animate-fade-in-up stagger-6">
+                <CardHeader className="pb-2 pt-4 px-4">
+                  <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                    <Zap className="h-4 w-4 text-muted-foreground" />
+                    Execution Volume (7d)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0 px-4 pb-4">
+                  <div className="h-52">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={executionVolume7d}>
+                        <defs>
+                          <linearGradient id="executionGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <XAxis
+                          dataKey="day"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: "#6b7280", fontSize: 10 }}
+                        />
+                        <YAxis hide />
+                        <Tooltip
+                          content={({ active, payload, label }) => {
+                            if (active && payload && payload.length) {
+                              return (
+                                <div className="rounded-md border bg-popover px-3 py-2 text-xs shadow-md">
+                                  <p className="font-medium mb-1">{label}</p>
+                                  <p className="text-muted-foreground">{payload[0].value} executions</p>
+                                  <p className="text-muted-foreground">${(payload[0].payload as any).cost.toFixed(2)} cost</p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="executions"
+                          stroke="#3b82f6"
+                          strokeWidth={2}
+                          fill="url(#executionGradient)"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Right: Recent Incidents */}
+              <Card className="card-hover animate-fade-in-up stagger-6">
+                <CardHeader className="pb-2 pt-4 px-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                      <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                      Recent Incidents
+                    </CardTitle>
+                    <a href="/incidents" className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
+                      View all <ArrowUpRight className="h-3 w-3" />
+                    </a>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0 px-2 pb-2">
+                  <div className="space-y-0.5">
+                    {recentIncidents.map((incident, index) => (
+                      <div
+                        key={incident.id}
+                        className={cn(
+                          "flex items-start gap-3 rounded-md px-2 py-2 table-row-hover cursor-pointer animate-fade-in-up",
+                          `stagger-${Math.min(index + 1, 6)}`
+                        )}
+                      >
+                        <div className={cn(
+                          "w-1 h-full min-h-[36px] rounded-full shrink-0",
+                          incident.severity === "critical" && "bg-red-500",
+                          incident.severity === "warning" && "bg-amber-500",
+                          incident.severity === "low" && "bg-blue-500"
+                        )} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{incident.title}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <SeverityBadge severity={incident.severity as any} />
+                            <RelativeTime date={incident.created_at} className="text-[10px]" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
