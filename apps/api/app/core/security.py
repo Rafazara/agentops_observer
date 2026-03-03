@@ -102,6 +102,10 @@ def decode_token(token: str) -> dict[str, Any] | None:
         return None
 
 
+# Alias for backward compatibility
+decode_access_token = decode_token
+
+
 def hash_password(password: str) -> str:
     """
     Hash a password using bcrypt.
