@@ -1,0 +1,48 @@
+# Web frontend (not needed for API)
+apps/web
+apps/collector
+
+# Node modules
+node_modules
+**/node_modules
+
+# Build outputs
+.next
+**/.next
+dist
+build
+*.egg-info
+__pycache__
+*.py[cod]
+
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# Infrastructure (local dev only)
+infrastructure/
+
+# IDE
+.idea
+.vscode
+*.swp
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Tests
+tests/
+**/tests/
+pytest.ini
+.pytest_cache
+
+# Misc
+.DS_Store
+Thumbs.db
+*.log
