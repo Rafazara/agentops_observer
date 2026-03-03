@@ -200,7 +200,7 @@ class AlertHistory(BaseSchema):
 # Anomaly Detection Models
 # ============================================================================
 
-class AnomalyType(BaseSchema):
+class AnomalyType(str, Enum):
     """Detected anomaly type."""
     LOOP_DETECTED = "loop_detected"
     COST_SPIKE = "cost_spike"
