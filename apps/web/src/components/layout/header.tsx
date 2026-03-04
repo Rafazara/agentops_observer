@@ -2,6 +2,7 @@
 
 import { Bell, Search, User, Command } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ApiStatusIndicator } from "@/components/api-status";
 
 export function Header() {
   return (
@@ -24,7 +25,8 @@ export function Header() {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
+        <ApiStatusIndicator />
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5 text-[hsl(var(--text-secondary))]" />
           <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[hsl(var(--error))] text-[10px] font-semibold text-white">

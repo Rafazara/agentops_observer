@@ -1,9 +1,20 @@
 /**
  * TanStack Query hooks for all API endpoints
+ * 
+ * Uses placeholderData from mock-data.ts for instant loading.
+ * Real API data replaces placeholder when available.
  */
 
 import { useQuery, useMutation, useQueryClient, UseQueryOptions } from "@tanstack/react-query";
 import { api, ApiError } from "./api-client";
+import {
+  mockExecutionStats,
+  mockExecutionsPaginated,
+  mockAgentsTyped,
+  mockCostSummary,
+  mockIncidentsTyped,
+  mockIncidentStatsTyped,
+} from "./mock-data";
 import type {
   ExecutionSummary,
   ExecutionWithTrace,
@@ -124,6 +135,7 @@ export function useExecutions(filters?: ExecutionFilters) {
     queryKey: queryKeys.executions(filters),
     queryFn: () => api.get<PaginatedResponse<ExecutionSummary>>("/api/v1/executions", filters),
     staleTime: 10 * 1000, // 10 seconds
+    placeholderData: mockExecutionsPaginated,
   });
 }
 
@@ -148,6 +160,7 @@ export function useExecutionStats(period: string = "24h") {
     queryKey: queryKeys.executionStats(period),
     queryFn: () => api.get<ExecutionStats>("/api/v1/executions/stats/summary", { period }),
     staleTime: 30 * 1000, // 30 seconds
+    placeholderData: mockExecutionStats,
   });
 }
 
@@ -166,6 +179,7 @@ export function useAgents(filters?: AgentFilters) {
     queryKey: queryKeys.agents(filters),
     queryFn: () => api.get<Agent[]>("/api/v1/agents", filters),
     staleTime: 60 * 1000, // 1 minute
+    placeholderData: mockAgentsTyped,
   });
 }
 
@@ -186,6 +200,7 @@ export function useCostsSummary(period: string = "30d") {
     queryKey: queryKeys.costsSummary(period),
     queryFn: () => api.get<CostSummary>("/api/v1/costs/summary", { period }),
     staleTime: 60 * 1000, // 1 minute
+    placeholderData: mockCostSummary,
   });
 }
 
@@ -254,6 +269,7 @@ export function useIncidents(filters?: IncidentFilters) {
     queryKey: queryKeys.incidents(filters),
     queryFn: () => api.get<Incident[]>("/api/v1/incidents", normalizeFilters(filters)),
     staleTime: 10 * 1000, // 10 seconds
+    placeholderData: mockIncidentsTyped,
   });
 }
 
@@ -278,6 +294,7 @@ export function useIncidentStats(period: string = "30d") {
     queryKey: queryKeys.incidentStats(period),
     queryFn: () => api.get<IncidentStats>("/api/v1/incidents/stats/summary", { period }),
     staleTime: 30 * 1000, // 30 seconds
+    placeholderData: mockIncidentStatsTyped,
   });
 }
 
