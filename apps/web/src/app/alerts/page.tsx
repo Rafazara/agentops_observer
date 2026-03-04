@@ -16,6 +16,7 @@ import { CountUpNumber } from "@/components/ui/count-up";
 import { RelativeTime } from "@/components/ui/relative-time";
 import { NoAlerts } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import {
   Bell,
@@ -86,6 +87,8 @@ function getChannelDisplay(channel: string) {
 }
 
 export default function AlertsPage() {
+  const { toast } = useToast();
+  
   // Fetch alert rules from API
   const { 
     data: alertRules, 
@@ -121,16 +124,31 @@ export default function AlertsPage() {
   // Handlers
   const handleToggleEnabled = (rule: AlertRule) => {
     updateRule.mutate({ id: rule.id, data: { enabled: !rule.enabled } });
+    toast({
+      type: rule.enabled ? "info" : "success",
+      title: rule.enabled ? "Alert disabled" : "Alert enabled",
+      description: `"${rule.name}" has been ${rule.enabled ? "paused" : "activated"}.`,
+    });
   };
 
   const handleDelete = (ruleId: string) => {
     if (confirm("Are you sure you want to delete this alert rule?")) {
       deleteRule.mutate(ruleId);
+      toast({
+        type: "success",
+        title: "Alert deleted",
+        description: "The alert rule has been permanently removed.",
+      });
     }
   };
 
   const handleTest = (ruleId: string) => {
     testRule.mutate(ruleId);
+    toast({
+      type: "success",
+      title: "Test alert sent",
+      description: "A test notification was sent to all configured channels.",
+    });
   };
 
   if (isLoading) {

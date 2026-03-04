@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { PageTitle } from "@/components/layout/page-title";
-import { Footer } from "@/components/layout/footer";
 import {
   Card,
   CardContent,
@@ -13,97 +12,62 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ui/use-toast";
+import { mockSettings } from "@/lib/mock-data";
 import {
   Key,
   Copy,
   Check,
-  Eye,
-  EyeOff,
   Plus,
   Trash2,
   Users,
-  Mail,
-  Webhook,
-  Bell,
   CreditCard,
-  Building2,
-  RefreshCw,
   ExternalLink,
   AlertTriangle,
-  AlertCircle,
-  Shield,
+  Settings2,
+  Globe,
+  Zap,
+  Crown,
 } from "lucide-react";
-import { useApiKeys, useRevokeApiKey } from "@/lib/hooks";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-// Keep the local interface for display - team and integrations are still mock
-interface TeamMember {
-  id: string;
-  email: string;
-  name: string;
-  role: "owner" | "admin" | "member" | "viewer";
-  status: "active" | "pending";
-  joined_at: string;
-}
+type SettingsTab = "general" | "team" | "api-keys" | "integrations" | "billing";
+
+type TeamRole = "owner" | "admin" | "developer" | "viewer";
 
 interface Integration {
-  id: string;
   name: string;
-  type: "slack" | "pagerduty" | "jira" | "email" | "webhook";
-  status: "connected" | "disconnected" | "error";
-  config?: Record<string, string>;
+  icon: string;
+  connected: boolean;
+  detail: string | null;
+  since?: string;
 }
 
 // ============================================================================
-// MOCK DATA (Team & Integrations - API not yet available)
+// CONSTANTS
 // ============================================================================
 
-const mockTeamMembers: TeamMember[] = [
-  {
-    id: "user-001",
-    email: "admin@company.com",
-    name: "Alex Johnson",
-    role: "owner",
-    status: "active",
-    joined_at: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "user-002",
-    email: "sarah@company.com",
-    name: "Sarah Chen",
-    role: "admin",
-    status: "active",
-    joined_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "user-003",
-    email: "mike@company.com",
-    name: "Mike Williams",
-    role: "member",
-    status: "active",
-    joined_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "user-004",
-    email: "pending@company.com",
-    name: "",
-    role: "member",
-    status: "pending",
-    joined_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-  },
+const TABS: { id: SettingsTab; label: string; icon: React.ElementType }[] = [
+  { id: "general", label: "General", icon: Settings2 },
+  { id: "team", label: "Team", icon: Users },
+  { id: "api-keys", label: "API Keys", icon: Key },
+  { id: "integrations", label: "Integrations", icon: Globe },
+  { id: "billing", label: "Billing", icon: CreditCard },
 ];
 
-const mockIntegrations: Integration[] = [
-  { id: "int-001", name: "Slack", type: "slack", status: "connected", config: { channel: "#alerts" } },
-  { id: "int-002", name: "PagerDuty", type: "pagerduty", status: "connected" },
-  { id: "int-003", name: "Jira", type: "jira", status: "disconnected" },
-  { id: "int-004", name: "Email Alerts", type: "email", status: "connected", config: { recipients: "3 recipients" } },
-  { id: "int-005", name: "Custom Webhook", type: "webhook", status: "error" },
+const TIMEZONES = [
+  "America/Sao_Paulo",
+  "America/New_York",
+  "America/Los_Angeles",
+  "Europe/London",
+  "Europe/Berlin",
+  "Asia/Tokyo",
+  "Asia/Singapore",
+  "UTC",
 ];
 
 // ============================================================================
@@ -120,27 +84,25 @@ function CopyButton({ text, className }: { text: string; className?: string }) {
   };
 
   return (
-    <Button
-      variant="ghost"
-      size="sm"
+    <button
       onClick={handleCopy}
-      className={cn("h-8 w-8 p-0", className)}
+      className={cn("p-1.5 rounded hover:bg-[hsl(var(--bg-hover))] transition-colors", className)}
     >
       {copied ? (
-        <Check className="h-4 w-4 text-emerald-500" />
+        <Check className="h-4 w-4 text-[hsl(var(--success))]" />
       ) : (
-        <Copy className="h-4 w-4" />
+        <Copy className="h-4 w-4 text-[hsl(var(--text-muted))]" />
       )}
-    </Button>
+    </button>
   );
 }
 
-function RoleBadge({ role }: { role: TeamMember["role"] }) {
-  const config: Record<TeamMember["role"], { bg: string; text: string }> = {
-    owner: { bg: "bg-purple-500/20", text: "text-purple-400" },
+function RoleBadge({ role }: { role: TeamRole }) {
+  const config: Record<TeamRole, { bg: string; text: string }> = {
+    owner: { bg: "bg-amber-500/20", text: "text-amber-400" },
     admin: { bg: "bg-blue-500/20", text: "text-blue-400" },
-    member: { bg: "bg-zinc-500/20", text: "text-zinc-400" },
-    viewer: { bg: "bg-zinc-500/20", text: "text-zinc-500" },
+    developer: { bg: "bg-emerald-500/20", text: "text-emerald-400" },
+    viewer: { bg: "bg-zinc-500/20", text: "text-zinc-400" },
   };
   const { bg, text } = config[role];
   return (
@@ -150,117 +112,549 @@ function RoleBadge({ role }: { role: TeamMember["role"] }) {
   );
 }
 
-function IntegrationIcon({ type }: { type: Integration["type"] }) {
-  const icons: Record<Integration["type"], React.ReactNode> = {
-    slack: <span className="text-lg">💬</span>,
-    pagerduty: <span className="text-lg">📟</span>,
-    jira: <span className="text-lg">🎫</span>,
-    email: <Mail className="h-5 w-5 text-zinc-400" />,
-    webhook: <Webhook className="h-5 w-5 text-zinc-400" />,
+function IntegrationIcon({ icon }: { icon: string }) {
+  const icons: Record<string, React.ReactNode> = {
+    slack: <span className="text-xl">💬</span>,
+    pagerduty: <span className="text-xl">📟</span>,
+    jira: <span className="text-xl">🎫</span>,
+    github: <span className="text-xl">🐙</span>,
+    datadog: <span className="text-xl">🐕</span>,
+    linear: <span className="text-xl">📐</span>,
   };
-  return icons[type];
+  return <div className="w-10 h-10 rounded-lg bg-[hsl(var(--bg-surface))] flex items-center justify-center">{icons[icon] || <Globe className="h-5 w-5" />}</div>;
 }
 
-function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function formatRelativeTime(dateString: string | null): string {
-  if (!dateString) return "Never";
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 30) return `${diffDays}d ago`;
-  return formatDate(dateString);
+function Avatar({ initials, className }: { initials: string; className?: string }) {
+  const colors = ["bg-blue-500", "bg-emerald-500", "bg-amber-500", "bg-purple-500", "bg-pink-500"];
+  const colorIndex = initials.charCodeAt(0) % colors.length;
+  return (
+    <div className={cn("w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-semibold", colors[colorIndex], className)}>
+      {initials}
+    </div>
+  );
 }
 
 // ============================================================================
-// TAB COMPONENTS
+// TAB CONTENT COMPONENTS
 // ============================================================================
 
-type SettingsTab = "api-keys" | "team" | "integrations" | "billing" | "organization";
+function GeneralTab() {
+  const { toast } = useToast();
+  const [orgName, setOrgName] = useState(mockSettings.organization.name);
+  const [timezone, setTimezone] = useState(mockSettings.organization.timezone);
+  const [budget, setBudget] = useState(mockSettings.organization.monthlyBudget);
+  const [deleteInput, setDeleteInput] = useState("");
+  
+  const handleSave = () => {
+    toast({ type: "success", title: "Settings saved", description: "Organization settings updated successfully" });
+  };
+  
+  const handleDelete = () => {
+    if (deleteInput === orgName) {
+      toast({ type: "info", title: "Demo Mode", description: "Organization deletion disabled in demo" });
+    }
+  };
 
-const TABS: { id: SettingsTab; label: string; icon: React.ElementType }[] = [
-  { id: "api-keys", label: "API Keys", icon: Key },
-  { id: "team", label: "Team", icon: Users },
-  { id: "integrations", label: "Integrations", icon: Webhook },
-  { id: "billing", label: "Billing", icon: CreditCard },
-  { id: "organization", label: "Organization", icon: Building2 },
-];
+  return (
+    <div className="space-y-6">
+      <Card className="card">
+        <CardHeader>
+          <CardTitle className="text-base">Organization Settings</CardTitle>
+          <CardDescription>Manage your organization details</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-[hsl(var(--text-secondary))]">Organization Name</label>
+            <input
+              type="text"
+              value={orgName}
+              onChange={(e) => setOrgName(e.target.value)}
+              className="input-field w-full"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-[hsl(var(--text-secondary))]">Slug</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={mockSettings.organization.slug}
+                readOnly
+                className="input-field w-full bg-[hsl(var(--bg-hover))] text-[hsl(var(--text-muted))]"
+              />
+              <CopyButton text={mockSettings.organization.slug} />
+            </div>
+            <p className="text-xs text-[hsl(var(--text-muted))]">Used in URLs: agentops.ai/{mockSettings.organization.slug}</p>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-[hsl(var(--text-secondary))]">Timezone</label>
+            <select
+              value={timezone}
+              onChange={(e) => setTimezone(e.target.value)}
+              className="input-field w-full"
+            >
+              {TIMEZONES.map(tz => (
+                <option key={tz} value={tz}>{tz}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-[hsl(var(--text-secondary))]">Monthly Budget</label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[hsl(var(--text-muted))]">$</span>
+              <input
+                type="number"
+                value={budget}
+                onChange={(e) => setBudget(Number(e.target.value))}
+                className="input-field w-full pl-7"
+              />
+            </div>
+          </div>
+          
+          <Button onClick={handleSave} className="btn-primary">Save Changes</Button>
+        </CardContent>
+      </Card>
+      
+      <Card className="card border-[hsl(var(--error))]/30">
+        <CardHeader>
+          <CardTitle className="text-base text-[hsl(var(--error))] flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4" />
+            Danger Zone
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-[hsl(var(--text-muted))]">
+            Once you delete an organization, there is no going back. Please be certain.
+          </p>
+          <div className="space-y-2">
+            <label className="text-sm text-[hsl(var(--text-secondary))]">
+              Type <strong>{orgName}</strong> to confirm
+            </label>
+            <input
+              type="text"
+              value={deleteInput}
+              onChange={(e) => setDeleteInput(e.target.value)}
+              placeholder="Organization name"
+              className="input-field w-full"
+            />
+          </div>
+          <Button
+            variant="destructive"
+            disabled={deleteInput !== orgName}
+            onClick={handleDelete}
+            className="bg-[hsl(var(--error))] hover:bg-[hsl(var(--error))]/90"
+          >
+            Delete Organization
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function TeamTab() {
+  const { toast } = useToast();
+  const [team, setTeam] = useState(mockSettings.team);
+  const [showInvite, setShowInvite] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<TeamRole>("developer");
+  
+  const handleInvite = () => {
+    if (inviteEmail) {
+      toast({ type: "success", title: "Invitation sent!", description: `Invite sent to ${inviteEmail}` });
+      setShowInvite(false);
+      setInviteEmail("");
+    }
+  };
+  
+  const handleRemove = (id: string) => {
+    setTeam(team.filter(m => m.id !== id));
+    toast({ type: "success", title: "Member removed" });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-medium text-[hsl(var(--text-primary))]">Team Members</h2>
+          <p className="text-sm text-[hsl(var(--text-muted))]">{team.length} members</p>
+        </div>
+        <Button onClick={() => setShowInvite(true)} className="btn-primary gap-2">
+          <Plus className="h-4 w-4" />
+          Invite Member
+        </Button>
+      </div>
+      
+      {showInvite && (
+        <Card className="card border-[hsl(var(--primary))]/30">
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center gap-4">
+              <input
+                type="email"
+                placeholder="Email address"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                className="input-field flex-1"
+              />
+              <select
+                value={inviteRole}
+                onChange={(e) => setInviteRole(e.target.value as TeamRole)}
+                className="input-field"
+              >
+                <option value="admin">Admin</option>
+                <option value="developer">Developer</option>
+                <option value="viewer">Viewer</option>
+              </select>
+              <Button onClick={handleInvite} className="btn-primary">Send Invite</Button>
+              <Button variant="ghost" onClick={() => setShowInvite(false)}>Cancel</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      <Card className="card">
+        <CardContent className="p-0 divide-y divide-[hsl(var(--border-subtle))]">
+          {team.map(member => (
+            <div key={member.id} className="flex items-center gap-4 p-4">
+              <Avatar initials={member.avatar} />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-[hsl(var(--text-primary))]">{member.name}</p>
+                <p className="text-sm text-[hsl(var(--text-muted))] truncate">{member.email}</p>
+              </div>
+              <RoleBadge role={member.role} />
+              <span className="text-xs text-[hsl(var(--text-disabled))]">{member.lastActive}</span>
+              {member.role !== "owner" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleRemove(member.id)}
+                  className="text-[hsl(var(--text-muted))] hover:text-[hsl(var(--error))]"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function ApiKeysTab() {
+  const { toast } = useToast();
+  const [keys, setKeys] = useState(mockSettings.apiKeys);
+  const [showCreate, setShowCreate] = useState(false);
+  const [newKeyName, setNewKeyName] = useState("");
+  const [generatedKey, setGeneratedKey] = useState<string | null>(null);
+  
+  const handleCreate = () => {
+    if (!newKeyName) return;
+    const fakeKey = `agops_sk_live_${Math.random().toString(36).substring(2, 14)}`;
+    setGeneratedKey(fakeKey);
+    setKeys([{ 
+      id: `key_${Date.now()}`, 
+      name: newKeyName, 
+      prefix: "agops_sk_live_", 
+      created: "Just now", 
+      lastUsed: "Never", 
+      status: "active" as const 
+    }, ...keys]);
+    setNewKeyName("");
+  };
+  
+  const handleRevoke = (id: string) => {
+    if (confirm("Are you sure you want to revoke this API key? This action cannot be undone.")) {
+      setKeys(keys.filter(k => k.id !== id));
+      toast({ type: "success", title: "API key revoked" });
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-medium text-[hsl(var(--text-primary))]">API Keys</h2>
+          <p className="text-sm text-[hsl(var(--text-muted))]">Manage SDK authentication keys</p>
+        </div>
+        <Button onClick={() => { setShowCreate(true); setGeneratedKey(null); }} className="btn-primary gap-2">
+          <Plus className="h-4 w-4" />
+          Generate New Key
+        </Button>
+      </div>
+      
+      {showCreate && (
+        <Card className="card border-[hsl(var(--primary))]/30">
+          <CardContent className="p-4 space-y-4">
+            {!generatedKey ? (
+              <div className="flex items-center gap-4">
+                <input
+                  type="text"
+                  placeholder="Key name (e.g., Production SDK)"
+                  value={newKeyName}
+                  onChange={(e) => setNewKeyName(e.target.value)}
+                  className="input-field flex-1"
+                />
+                <Button onClick={handleCreate} className="btn-primary">Generate Key</Button>
+                <Button variant="ghost" onClick={() => setShowCreate(false)}>Cancel</Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 p-3 bg-[hsl(var(--warning))]/10 border border-[hsl(var(--warning))]/30 rounded-lg">
+                  <AlertTriangle className="h-4 w-4 text-[hsl(var(--warning))]" />
+                  <span className="text-sm text-[hsl(var(--warning))]">Save this key — it will only be shown once</span>
+                </div>
+                <div className="flex items-center gap-2 p-3 bg-[hsl(var(--bg-surface))] rounded-lg font-mono text-sm">
+                  <code className="flex-1 break-all">{generatedKey}</code>
+                  <CopyButton text={generatedKey} />
+                </div>
+                <Button onClick={() => setShowCreate(false)} className="btn-primary">Done</Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+      
+      <Card className="card">
+        <CardContent className="p-0 divide-y divide-[hsl(var(--border-subtle))]">
+          {keys.map(key => (
+            <div key={key.id} className="flex items-center gap-4 p-4">
+              <div className="w-10 h-10 rounded-lg bg-[hsl(var(--primary))]/10 flex items-center justify-center">
+                <Key className="h-5 w-5 text-[hsl(var(--primary))]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-[hsl(var(--text-primary))]">{key.name}</p>
+                <p className="text-sm text-[hsl(var(--text-muted))] font-mono">{key.prefix}****</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-[hsl(var(--text-secondary))]">Created {key.created}</p>
+                <p className="text-xs text-[hsl(var(--text-muted))]">Last used {key.lastUsed}</p>
+              </div>
+              <span className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase bg-emerald-500/20 text-emerald-400">
+                {key.status}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleRevoke(key.id)}
+                className="text-[hsl(var(--text-muted))] hover:text-[hsl(var(--error))]"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function IntegrationsTab() {
+  const { toast } = useToast();
+  const [integrations, setIntegrations] = useState<Integration[]>(mockSettings.integrations as Integration[]);
+  
+  const handleConnect = (name: string) => {
+    toast({ type: "info", title: "Demo Mode", description: `Opens OAuth flow in production for ${name}` });
+  };
+  
+  const handleDisconnect = (name: string) => {
+    setIntegrations(integrations.map(i => 
+      i.name === name ? { ...i, connected: false, detail: null } : i
+    ));
+    toast({ type: "success", title: `${name} disconnected` });
+  };
+  
+  const handleTestSlack = () => {
+    toast({ type: "success", title: "Test alert sent!", description: "Check #ai-alerts channel" });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-lg font-medium text-[hsl(var(--text-primary))]">Integrations</h2>
+        <p className="text-sm text-[hsl(var(--text-muted))]">Connect external services for alerts and ticketing</p>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {integrations.map(integration => (
+          <Card key={integration.name} className="card">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-start justify-between">
+                <IntegrationIcon icon={integration.icon} />
+                {integration.connected ? (
+                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase bg-emerald-500/20 text-emerald-400">
+                    Connected
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase bg-zinc-500/20 text-zinc-400">
+                    Not Connected
+                  </span>
+                )}
+              </div>
+              <div>
+                <p className="font-medium text-[hsl(var(--text-primary))]">{integration.name}</p>
+                {integration.connected && integration.detail && (
+                  <p className="text-sm text-[hsl(var(--text-muted))]">{integration.detail}</p>
+                )}
+                {integration.connected && integration.since && (
+                  <p className="text-xs text-[hsl(var(--text-disabled))]">Since {integration.since}</p>
+                )}
+              </div>
+              <div className="flex gap-2">
+                {integration.connected ? (
+                  <>
+                    {integration.name === "Slack" && (
+                      <Button variant="outline" size="sm" onClick={handleTestSlack}>
+                        Test Alert
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDisconnect(integration.name)}
+                      className="text-[hsl(var(--text-muted))] hover:text-[hsl(var(--error))]"
+                    >
+                      Disconnect
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleConnect(integration.name)}
+                    className="gap-1"
+                  >
+                    Connect
+                    <ExternalLink className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BillingTab() {
+  const { toast } = useToast();
+  const billing = mockSettings.billing;
+  
+  const usageColor = billing.usagePercent < 70 
+    ? "bg-[hsl(var(--success))]" 
+    : billing.usagePercent < 90 
+      ? "bg-[hsl(var(--warning))]" 
+      : "bg-[hsl(var(--error))]";
+  
+  const handleUpgrade = () => {
+    toast({ type: "info", title: "Demo Mode", description: "Upgrade available in production" });
+  };
+  
+  const handleUpdateCard = () => {
+    toast({ type: "info", title: "Demo Mode", description: "Payment method update available in production" });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="card">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Crown className="h-4 w-4 text-[hsl(var(--warning))]" />
+              Current Plan
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-bold text-[hsl(var(--text-primary))]">${billing.price}</span>
+              <span className="text-[hsl(var(--text-muted))]">/month</span>
+            </div>
+            <p className="text-[hsl(var(--primary))] font-medium">{billing.plan}</p>
+            <p className="text-sm text-[hsl(var(--text-muted))]">Next billing date: {billing.billingDate}</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="card">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Zap className="h-4 w-4 text-[hsl(var(--chart-3))]" />
+              Usage This Month
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-baseline justify-between">
+              <span className="text-2xl font-bold text-[hsl(var(--text-primary))]">{billing.eventsUsed}</span>
+              <span className="text-sm text-[hsl(var(--text-muted))]">/ {billing.eventsLimit} events</span>
+            </div>
+            <div className="w-full h-2 rounded-full bg-[hsl(var(--bg-hover))]">
+              <div
+                className={cn("h-full rounded-full transition-all", usageColor)}
+                style={{ width: `${billing.usagePercent}%` }}
+              />
+            </div>
+            <p className="text-sm text-[hsl(var(--text-muted))]">{billing.usagePercent}% of monthly limit</p>
+          </CardContent>
+        </Card>
+      </div>
+      
+      <Card className="card">
+        <CardHeader>
+          <CardTitle className="text-base">Payment Method</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-6 rounded bg-gradient-to-r from-blue-600 to-blue-400" />
+            <span className="text-[hsl(var(--text-primary))]">Visa ending in {billing.cardLast4}</span>
+          </div>
+          <Button variant="outline" onClick={handleUpdateCard}>Update Card</Button>
+        </CardContent>
+      </Card>
+      
+      <Card className="card">
+        <CardHeader>
+          <CardTitle className="text-base">Plan Comparison</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-4 text-sm">
+            <div className="p-4 rounded-lg border border-[hsl(var(--border-subtle))]">
+              <p className="font-semibold">Starter</p>
+              <p className="text-2xl font-bold">$99</p>
+              <p className="text-[hsl(var(--text-muted))]">5M events/mo</p>
+            </div>
+            <div className="p-4 rounded-lg border-2 border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/5">
+              <p className="font-semibold text-[hsl(var(--primary))]">Professional ✓</p>
+              <p className="text-2xl font-bold">${billing.price}</p>
+              <p className="text-[hsl(var(--text-muted))]">{billing.eventsLimit} events/mo</p>
+            </div>
+            <div className="p-4 rounded-lg border border-[hsl(var(--border-subtle))]">
+              <p className="font-semibold">Enterprise</p>
+              <p className="text-2xl font-bold">Custom</p>
+              <p className="text-[hsl(var(--text-muted))]">Unlimited</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Button onClick={handleUpgrade} className="btn-primary w-full md:w-auto gap-2" size="lg">
+        <Crown className="h-4 w-4" />
+        Upgrade to Enterprise
+      </Button>
+    </div>
+  );
+}
 
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<SettingsTab>("api-keys");
-  const [showKey, setShowKey] = useState<string | null>(null);
-
-  // API hooks for API keys
-  const { 
-    data: apiKeys, 
-    isLoading: isLoadingKeys, 
-    isError: isErrorKeys, 
-    error: errorKeys, 
-    refetch: refetchKeys,
-    isFetching: isFetchingKeys
-  } = useApiKeys();
-  
-  const revokeApiKey = useRevokeApiKey();
-  
-  // Get first key for quickstart example
-  const firstKey = apiKeys?.[0];
-  
-  // Handler for deleting API key
-  const handleRevokeKey = (keyId: string) => {
-    if (confirm("Are you sure you want to revoke this API key? This action cannot be undone.")) {
-      revokeApiKey.mutate(keyId);
-    }
-  };
-
-  // Overall loading state (just for API keys tab for now)
-  const isLoading = activeTab === "api-keys" && isLoadingKeys;
-
-  if (isLoading) {
-    return (
-      <div className="flex h-screen">
-        <Sidebar />
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <Header />
-          <main className="flex-1 overflow-auto p-6">
-            <div className="max-w-5xl mx-auto space-y-6">
-              <Skeleton className="h-8 w-32" />
-              <Skeleton className="h-4 w-64" />
-              <div className="flex gap-2">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Skeleton key={i} className="h-9 w-28" />
-                ))}
-              </div>
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-24" />
-                ))}
-              </div>
-            </div>
-          </main>
-        </div>
-      </div>
-    );
-  }
+  const [activeTab, setActiveTab] = useState<SettingsTab>("general");
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-[hsl(var(--bg-base))]">
       <PageTitle title="Settings" />
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
@@ -269,23 +663,23 @@ export default function SettingsPage() {
           <div className="max-w-5xl mx-auto space-y-6 animate-fade-in">
             {/* Page header */}
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-              <p className="text-sm text-muted-foreground">
-                Manage your account, API keys, team, and integrations
+              <h1 className="text-2xl font-semibold tracking-tight text-[hsl(var(--text-primary))]">Settings</h1>
+              <p className="text-sm text-[hsl(var(--text-muted))]">
+                Manage your organization, team, and integrations
               </p>
             </div>
 
             {/* Tabs */}
-            <div className="flex items-center gap-1 border-b border-border pb-px">
+            <div className="flex items-center gap-1 border-b border-[hsl(var(--border-default))] pb-px overflow-x-auto">
               {TABS.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-md transition-colors border-b-2 -mb-px",
+                    "flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap border-b-2 -mb-px",
                     activeTab === tab.id
-                      ? "border-primary text-foreground bg-accent/50"
-                      : "border-transparent text-muted-foreground hover:text-foreground hover:bg-accent/30"
+                      ? "border-[hsl(var(--primary))] text-[hsl(var(--text-primary))] bg-[hsl(var(--primary))]/5"
+                      : "border-transparent text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text-primary))] hover:bg-[hsl(var(--bg-hover))]"
                   )}
                 >
                   <tab.icon className="h-4 w-4" />
@@ -295,504 +689,15 @@ export default function SettingsPage() {
             </div>
 
             {/* Tab Content */}
-            <div className="space-y-6">
-              {/* API Keys Tab */}
-              {activeTab === "api-keys" && (
-                <div className="space-y-6 animate-fade-in">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-lg font-medium">API Keys</h2>
-                      <p className="text-sm text-muted-foreground">
-                        Manage API keys for SDK authentication
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="gap-2"
-                        onClick={() => refetchKeys()}
-                        disabled={isFetchingKeys}
-                      >
-                        <RefreshCw className={cn("h-3.5 w-3.5", isFetchingKeys && "animate-spin")} />
-                        Refresh
-                      </Button>
-                      <Button size="sm" className="gap-2">
-                        <Plus className="h-4 w-4" />
-                        Create Key
-                      </Button>
-                    </div>
-                  </div>
-
-                  {isErrorKeys ? (
-                    <Card className="border-destructive/50 bg-destructive/5">
-                      <CardContent className="p-6 flex items-center gap-3">
-                        <AlertCircle className="h-5 w-5 text-destructive" />
-                        <div>
-                          <p className="font-medium text-destructive">Failed to load API keys</p>
-                          <p className="text-sm text-muted-foreground">{errorKeys?.message || "Unknown error"}</p>
-                        </div>
-                        <Button variant="outline" onClick={() => refetchKeys()} className="ml-auto">
-                          <RefreshCw className="h-4 w-4 mr-2" />
-                          Retry
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <Card className="border-zinc-800">
-                      <CardContent className="p-0 divide-y divide-zinc-800">
-                        {(!apiKeys || apiKeys.length === 0) ? (
-                          <div className="p-8 text-center">
-                            <Key className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
-                            <p className="text-muted-foreground">No API keys yet</p>
-                            <p className="text-xs text-muted-foreground mt-1">Create your first API key to get started</p>
-                          </div>
-                        ) : (
-                          apiKeys.map((key) => (
-                            <div
-                              key={key.id}
-                              className="flex items-center justify-between p-4 hover:bg-accent/30 transition-colors"
-                            >
-                              <div className="flex items-center gap-4">
-                                <div className="h-10 w-10 rounded-lg bg-zinc-800 flex items-center justify-center">
-                                  <Key className="h-5 w-5 text-zinc-400" />
-                                </div>
-                                <div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium">{key.name}</span>
-                                    <span className="text-xs text-muted-foreground">
-                                      {key.scopes.length} scopes
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-2 mt-1">
-                                    <code className="text-xs bg-zinc-800 px-2 py-0.5 rounded font-mono">
-                                      {showKey === key.id ? `${key.key_prefix}...xxxxxxxxxxxx` : `${key.key_prefix}...****`}
-                                    </code>
-                                    <button
-                                      onClick={() => setShowKey(showKey === key.id ? null : key.id)}
-                                      className="text-muted-foreground hover:text-foreground"
-                                    >
-                                      {showKey === key.id ? (
-                                        <EyeOff className="h-3.5 w-3.5" />
-                                      ) : (
-                                        <Eye className="h-3.5 w-3.5" />
-                                      )}
-                                    </button>
-                                    <CopyButton text={key.key_prefix} />
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-6">
-                                <div className="text-right text-sm">
-                                  <div className="text-muted-foreground">Last used</div>
-                                  <div className="font-medium">
-                                    {formatRelativeTime(key.last_used_at || null)}
-                                  </div>
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                                  onClick={() => handleRevokeKey(key.id)}
-                                  disabled={revokeApiKey.isPending}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {/* Quickstart */}
-                  <Card className="border-zinc-800 bg-zinc-900/50">
-                    <CardHeader>
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <RefreshCw className="h-4 w-4 text-primary" />
-                        Quick Start
-                      </CardTitle>
-                      <CardDescription>
-                        Install the SDK and start tracing in under 2 minutes
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            1. Install the SDK
-                          </span>
-                          <CopyButton text="pip install agentops-observer" />
-                        </div>
-                        <pre className="bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm font-mono overflow-x-auto">
-                          <code className="text-emerald-400">pip install</code>{" "}
-                          <code>agentops-observer</code>
-                        </pre>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            2. Initialize & trace your agent
-                          </span>
-                          <CopyButton text={`import agentops
-
-agentops.init(api_key="${firstKey?.key_prefix || "YOUR_API_KEY"}...")
-
-@agentops.trace()
-async def my_agent(task: str):
-    # Your agent logic here
-    return result`} />
-                        </div>
-                        <pre className="bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm font-mono overflow-x-auto">
-                          <code>
-                            <span className="text-purple-400">import</span> agentops{"\n\n"}
-                            <span className="text-zinc-500"># Initialize with your API key</span>{"\n"}
-                            agentops.<span className="text-amber-400">init</span>(api_key=<span className="text-emerald-400">"{firstKey?.key_prefix || "YOUR_API_KEY"}..."</span>){"\n\n"}
-                            <span className="text-purple-400">@</span>agentops.<span className="text-amber-400">trace</span>(){"\n"}
-                            <span className="text-purple-400">async def</span> <span className="text-blue-400">my_agent</span>(task: <span className="text-cyan-400">str</span>):{"\n"}
-                            {"    "}<span className="text-zinc-500"># Your agent logic here</span>{"\n"}
-                            {"    "}<span className="text-purple-400">return</span> result
-                          </code>
-                        </pre>
-                      </div>
-
-                      <div className="flex items-center gap-2 pt-2">
-                        <Button variant="outline" size="sm" className="gap-2">
-                          <ExternalLink className="h-3.5 w-3.5" />
-                          View Full Documentation
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-
-              {/* Team Tab */}
-              {activeTab === "team" && (
-                <div className="space-y-6 animate-fade-in">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-lg font-medium">Team Members</h2>
-                      <p className="text-sm text-muted-foreground">
-                        Manage who has access to your organization
-                      </p>
-                    </div>
-                    <Button size="sm" className="gap-2">
-                      <Plus className="h-4 w-4" />
-                      Invite Member
-                    </Button>
-                  </div>
-
-                  <Card className="border-zinc-800">
-                    <CardContent className="p-0 divide-y divide-zinc-800">
-                      {mockTeamMembers.map((member) => (
-                        <div
-                          key={member.id}
-                          className="flex items-center justify-between p-4 hover:bg-accent/30 transition-colors"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-sm font-semibold">
-                              {member.name ? member.name.charAt(0).toUpperCase() : "?"}
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">
-                                  {member.name || member.email}
-                                </span>
-                                <RoleBadge role={member.role} />
-                                {member.status === "pending" && (
-                                  <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/20 text-amber-400">
-                                    PENDING
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-sm text-muted-foreground mt-0.5">
-                                {member.email}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <span className="text-sm text-muted-foreground">
-                              Joined {formatDate(member.joined_at)}
-                            </span>
-                            {member.role !== "owner" && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-
-              {/* Integrations Tab */}
-              {activeTab === "integrations" && (
-                <div className="space-y-6 animate-fade-in">
-                  <div>
-                    <h2 className="text-lg font-medium">Integrations</h2>
-                    <p className="text-sm text-muted-foreground">
-                      Connect AgentOps to your existing tools and workflows
-                    </p>
-                  </div>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {mockIntegrations.map((integration) => (
-                      <Card
-                        key={integration.id}
-                        className={cn(
-                          "border-zinc-800 hover:border-zinc-700 transition-colors cursor-pointer",
-                          integration.status === "error" && "border-red-500/30"
-                        )}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-lg bg-zinc-800 flex items-center justify-center">
-                                <IntegrationIcon type={integration.type} />
-                              </div>
-                              <div>
-                                <div className="font-medium">{integration.name}</div>
-                                <div className="text-sm text-muted-foreground">
-                                  {integration.config?.channel || integration.config?.recipients || integration.type}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {integration.status === "connected" && (
-                                <span className="flex items-center gap-1.5 text-xs text-emerald-400">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                                  Connected
-                                </span>
-                              )}
-                              {integration.status === "disconnected" && (
-                                <span className="text-xs text-muted-foreground">
-                                  Not connected
-                                </span>
-                              )}
-                              {integration.status === "error" && (
-                                <span className="flex items-center gap-1.5 text-xs text-red-400">
-                                  <AlertTriangle className="w-3.5 h-3.5" />
-                                  Error
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="mt-4 flex gap-2">
-                            {integration.status === "connected" ? (
-                              <>
-                                <Button variant="outline" size="sm" className="flex-1">
-                                  Configure
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                                >
-                                  Disconnect
-                                </Button>
-                              </>
-                            ) : (
-                              <Button size="sm" className="flex-1">
-                                Connect
-                              </Button>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Billing Tab */}
-              {activeTab === "billing" && (
-                <div className="space-y-6 animate-fade-in">
-                  <div>
-                    <h2 className="text-lg font-medium">Billing & Usage</h2>
-                    <p className="text-sm text-muted-foreground">
-                      Manage your subscription and view usage
-                    </p>
-                  </div>
-
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <Card className="border-zinc-800">
-                      <CardContent className="p-4">
-                        <div className="text-sm text-muted-foreground mb-1">Current Plan</div>
-                        <div className="text-2xl font-semibold">Pro</div>
-                        <div className="text-sm text-muted-foreground mt-1">$500/month</div>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-zinc-800">
-                      <CardContent className="p-4">
-                        <div className="text-sm text-muted-foreground mb-1">Executions This Month</div>
-                        <div className="text-2xl font-semibold">47,832</div>
-                        <div className="text-sm text-muted-foreground mt-1">of 100,000 included</div>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-zinc-800">
-                      <CardContent className="p-4">
-                        <div className="text-sm text-muted-foreground mb-1">Next Billing Date</div>
-                        <div className="text-2xl font-semibold">Mar 15</div>
-                        <div className="text-sm text-muted-foreground mt-1">$500.00 due</div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  <Card className="border-zinc-800">
-                    <CardHeader>
-                      <CardTitle className="text-base">Usage Breakdown</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div>
-                          <div className="flex items-center justify-between text-sm mb-2">
-                            <span>Executions</span>
-                            <span className="text-muted-foreground">47,832 / 100,000</span>
-                          </div>
-                          <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-primary rounded-full" style={{ width: "47.8%" }} />
-                          </div>
-                        </div>
-                        <div>
-                          <div className="flex items-center justify-between text-sm mb-2">
-                            <span>API Calls</span>
-                            <span className="text-muted-foreground">234,567 / 500,000</span>
-                          </div>
-                          <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-emerald-500 rounded-full" style={{ width: "46.9%" }} />
-                          </div>
-                        </div>
-                        <div>
-                          <div className="flex items-center justify-between text-sm mb-2">
-                            <span>Data Retention</span>
-                            <span className="text-muted-foreground">12.4 GB / 50 GB</span>
-                          </div>
-                          <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-amber-500 rounded-full" style={{ width: "24.8%" }} />
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <div className="flex gap-3">
-                    <Button variant="outline">View Invoices</Button>
-                    <Button variant="outline">Update Payment Method</Button>
-                    <Button>Upgrade Plan</Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Organization Tab */}
-              {activeTab === "organization" && (
-                <div className="space-y-6 animate-fade-in">
-                  <div>
-                    <h2 className="text-lg font-medium">Organization Settings</h2>
-                    <p className="text-sm text-muted-foreground">
-                      Manage your organization details and preferences
-                    </p>
-                  </div>
-
-                  <Card className="border-zinc-800">
-                    <CardContent className="p-6 space-y-6">
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Organization Name</label>
-                          <input
-                            type="text"
-                            defaultValue="Acme Corp"
-                            className="w-full h-9 rounded-md border border-zinc-700 bg-zinc-900 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Organization Slug</label>
-                          <input
-                            type="text"
-                            defaultValue="acme-corp"
-                            className="w-full h-9 rounded-md border border-zinc-700 bg-zinc-900 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Default Environment</label>
-                        <select className="w-full h-9 rounded-md border border-zinc-700 bg-zinc-900 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring">
-                          <option>Production</option>
-                          <option>Staging</option>
-                          <option>Development</option>
-                        </select>
-                      </div>
-
-                      <div className="pt-4 border-t border-zinc-800">
-                        <h3 className="text-sm font-medium mb-4 flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-muted-foreground" />
-                          Security Settings
-                        </h3>
-                        <div className="space-y-3">
-                          <label className="flex items-center justify-between">
-                            <div>
-                              <div className="text-sm font-medium">Require 2FA for all members</div>
-                              <div className="text-xs text-muted-foreground">Enforce two-factor authentication</div>
-                            </div>
-                            <input type="checkbox" className="h-4 w-4 rounded" defaultChecked />
-                          </label>
-                          <label className="flex items-center justify-between">
-                            <div>
-                              <div className="text-sm font-medium">IP Allowlist</div>
-                              <div className="text-xs text-muted-foreground">Restrict API access to specific IPs</div>
-                            </div>
-                            <input type="checkbox" className="h-4 w-4 rounded" />
-                          </label>
-                          <label className="flex items-center justify-between">
-                            <div>
-                              <div className="text-sm font-medium">Audit Logging</div>
-                              <div className="text-xs text-muted-foreground">Log all team member actions</div>
-                            </div>
-                            <input type="checkbox" className="h-4 w-4 rounded" defaultChecked />
-                          </label>
-                        </div>
-                      </div>
-
-                      <div className="flex justify-end gap-3 pt-4">
-                        <Button variant="outline">Cancel</Button>
-                        <Button>Save Changes</Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-red-500/30">
-                    <CardHeader>
-                      <CardTitle className="text-base text-red-400">Danger Zone</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="text-sm font-medium">Delete Organization</div>
-                          <div className="text-xs text-muted-foreground">
-                            Permanently delete this organization and all its data
-                          </div>
-                        </div>
-                        <Button variant="outline" className="text-red-400 border-red-500/30 hover:bg-red-500/10">
-                          Delete Organization
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
+            <div className="animate-fade-in">
+              {activeTab === "general" && <GeneralTab />}
+              {activeTab === "team" && <TeamTab />}
+              {activeTab === "api-keys" && <ApiKeysTab />}
+              {activeTab === "integrations" && <IntegrationsTab />}
+              {activeTab === "billing" && <BillingTab />}
             </div>
           </div>
         </main>
-        <Footer />
       </div>
     </div>
   );

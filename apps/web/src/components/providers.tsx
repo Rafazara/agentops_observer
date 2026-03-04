@@ -9,6 +9,7 @@ import { RichToastProvider } from "@/components/ui/use-toast";
 import { KeyboardProvider } from "@/components/keyboard/keyboard-provider";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { DemoModeProvider } from "@/lib/demo-mode";
+import { CommandPalette } from "@/components/command-palette";
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -43,6 +44,7 @@ export function Providers({ children }: { children: ReactNode }) {
               <RichToastProvider>
                 <DemoModeProvider>
                   <DemoModeBanner />
+                  <CommandPalette />
                   {children}
                   <TourButton />
                 </DemoModeProvider>

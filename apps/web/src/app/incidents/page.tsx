@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { CountUpNumber } from "@/components/ui/count-up";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import {
   AlertTriangle,
@@ -300,6 +301,7 @@ function AllClearState() {
 export default function IncidentsPage() {
   const [statusFilter, setStatusFilter] = useState<ApiIncidentStatus | null>(null);
   const router = useRouter();
+  const { toast } = useToast();
   
   // Fetch incidents and stats from API
   const { 
@@ -375,10 +377,20 @@ export default function IncidentsPage() {
   // Handler functions for mutations
   const handleAcknowledge = (id: string) => {
     acknowledgeIncident.mutate(id);
+    toast({
+      type: "success",
+      title: "Incident acknowledged",
+      description: "You've taken ownership of this incident.",
+    });
   };
 
   const handleResolve = (id: string) => {
     resolveIncident.mutate({ id });
+    toast({
+      type: "success",
+      title: "Incident resolved",
+      description: "Great work! This incident has been marked as resolved.",
+    });
   };
 
   if (isLoading) {

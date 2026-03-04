@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { checkApiHealth, type ApiStatus } from "@/lib/data-layer";
 import { Loader2 } from "lucide-react";
@@ -12,6 +12,7 @@ interface ApiStatusIndicatorProps {
 export function ApiStatusIndicator({ className }: ApiStatusIndicatorProps) {
   const [status, setStatus] = useState<ApiStatus>("demo");
   const [isChecking, setIsChecking] = useState(false);
+  const checkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
@@ -20,7 +21,20 @@ export function ApiStatusIndicator({ className }: ApiStatusIndicatorProps) {
       setIsChecking(true);
       setStatus("connecting");
       
-      const isLive = await checkApiHealth(3000);
+      // Set a 5-second max for "connecting" state - if API doesn't respond, show "Demo"
+      checkTimeoutRef.current = setTimeout(() => {
+        setStatus("demo");
+        setIsChecking(false);
+      }, 5000);
+      
+      const isLive = await checkApiHealth(5000);
+      
+      // Clear the fallback timeout since we got a response
+      if (checkTimeoutRef.current) {
+        clearTimeout(checkTimeoutRef.current);
+        checkTimeoutRef.current = null;
+      }
+      
       setStatus(isLive ? "live" : "demo");
       setIsChecking(false);
     };
@@ -33,6 +47,7 @@ export function ApiStatusIndicator({ className }: ApiStatusIndicatorProps) {
 
     return () => {
       if (intervalId) clearInterval(intervalId);
+      if (checkTimeoutRef.current) clearTimeout(checkTimeoutRef.current);
     };
   }, []);
 
@@ -42,18 +57,21 @@ export function ApiStatusIndicator({ className }: ApiStatusIndicatorProps) {
       dot: "bg-[hsl(var(--success))]",
       text: "text-[hsl(var(--success))]",
       animate: false,
+      tooltip: "Connected to live API",
     },
     connecting: {
       label: "Connecting...",
       dot: "bg-[hsl(var(--warning))]",
       text: "text-[hsl(var(--warning))]",
       animate: true,
+      tooltip: "Checking API connection...",
     },
     demo: {
       label: "Demo",
       dot: "bg-[hsl(var(--text-muted))]",
       text: "text-[hsl(var(--text-muted))]",
       animate: false,
+      tooltip: "Using demo data · API offline",
     },
   };
 
@@ -62,10 +80,11 @@ export function ApiStatusIndicator({ className }: ApiStatusIndicatorProps) {
   return (
     <div
       className={cn(
-        "flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-all",
+        "flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-all cursor-help",
         "bg-[hsl(var(--bg-surface))] border border-[hsl(var(--border-subtle))]",
         className
       )}
+      title={config.tooltip}
     >
       {isChecking ? (
         <Loader2 className="w-3 h-3 animate-spin text-[hsl(var(--warning))]" />

@@ -892,3 +892,102 @@ export const mockIncidentStatsTyped = {
   avg_acknowledge_seconds: mockIncidentStats.avg_acknowledge_seconds,
   avg_resolve_seconds: mockIncidentStats.avg_resolve_seconds,
 } as IncidentStats;
+
+// ============================================================================
+// SETTINGS MOCK DATA
+// ============================================================================
+
+export const mockSettings = {
+  organization: {
+    name: "Acme Corp",
+    slug: "acme-corp",
+    plan: "Professional",
+    timezone: "America/Sao_Paulo",
+    monthlyBudget: 5000,
+  },
+  team: [
+    { id: "1", name: "Rafael Zara", email: "rafael@acme.com", 
+      role: "owner" as const, avatar: "RZ", lastActive: "Online now" },
+    { id: "2", name: "Ana Silva", email: "ana@acme.com", 
+      role: "admin" as const, avatar: "AS", lastActive: "2h ago" },
+    { id: "3", name: "Carlos Mendes", email: "carlos@acme.com", 
+      role: "developer" as const, avatar: "CM", lastActive: "Yesterday" },
+  ],
+  apiKeys: [
+    { id: "key_1", name: "Production SDK", prefix: "agops_sk_prod_", 
+      created: "Jan 15, 2026", lastUsed: "2 minutes ago", status: "active" as const },
+    { id: "key_2", name: "Staging SDK", prefix: "agops_sk_stag_", 
+      created: "Feb 3, 2026", lastUsed: "1 day ago", status: "active" as const },
+  ],
+  integrations: [
+    { name: "Slack", icon: "slack", connected: true, 
+      detail: "#ai-alerts channel", since: "Dec 2025" },
+    { name: "PagerDuty", icon: "pagerduty", connected: false, detail: null },
+    { name: "Jira", icon: "jira", connected: true, 
+      detail: "AIOPS project", since: "Jan 2026" },
+    { name: "GitHub Actions", icon: "github", connected: false, detail: null },
+    { name: "Datadog", icon: "datadog", connected: false, detail: null },
+    { name: "Linear", icon: "linear", connected: false, detail: null },
+  ],
+  billing: {
+    plan: "Professional",
+    price: 499,
+    billingDate: "April 1, 2026",
+    usagePercent: 74,
+    eventsUsed: "14.8M",
+    eventsLimit: "20M",
+    cardLast4: "4242",
+  },
+};
+
+// ============================================================================
+// NOTIFICATIONS MOCK DATA
+// ============================================================================
+
+export const mockNotifications = [
+  {
+    id: "notif_1",
+    type: "critical" as const,
+    title: "Critical incident detected",
+    message: "Infinite loop in invoice-processor — 8 executions affected",
+    time: "2m ago",
+    read: false,
+    link: "/incidents/inc-001",
+  },
+  {
+    id: "notif_2",
+    type: "warning" as const,
+    title: "Cost threshold exceeded",
+    message: "data-analyst spent $2.48 in a single execution (5x avg)",
+    time: "23m ago",
+    read: false,
+    link: "/executions/exec_cost_spike",
+  },
+  {
+    id: "notif_3",
+    type: "warning" as const,
+    title: "Quality degradation warning",
+    message: "lead-qualifier avg quality dropped to 71 (was 88)",
+    time: "2h ago",
+    read: false,
+    link: "/agents/lead-qualifier",
+  },
+  {
+    id: "notif_4",
+    type: "success" as const,
+    title: "Incident resolved",
+    message: "Rate limit on OpenAI API — resolved automatically",
+    time: "3h ago",
+    read: true,
+    link: "/incidents/inc-resolved",
+  },
+  {
+    id: "notif_5",
+    type: "info" as const,
+    title: "Cost optimization available",
+    message: "Switching 40% of tasks to Claude Haiku saves ~$127/mo",
+    time: "1d ago",
+    read: true,
+    link: "/costs",
+  },
+];
