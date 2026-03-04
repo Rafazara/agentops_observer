@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -19,6 +19,8 @@ import {
   ChevronLeft,
   ChevronRight,
   User,
+  Menu,
+  X,
   type LucideIcon,
 } from "lucide-react";
 
@@ -166,25 +168,121 @@ function AgentOpsLogo({ collapsed }: { collapsed: boolean }) {
 export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  // Close mobile menu on escape key
+  useEffect(() => {
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === "Escape") setMobileOpen(false);
+    }
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, []);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
 
   return (
-    <div
-      className={cn(
-        "relative flex h-full flex-col border-r transition-all duration-200",
-        collapsed ? "w-16" : "w-60",
-        "bg-[hsl(var(--bg-surface))]",
-        "border-[hsl(var(--border-default))]"
+    <>
+      {/* Mobile Hamburger Button */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        className={cn(
+          "fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-lg lg:hidden",
+          "bg-[hsl(var(--bg-elevated))] border border-[hsl(var(--border-default))]",
+          "text-[hsl(var(--text-secondary))] hover:text-[hsl(var(--text-primary))]",
+          "hover:bg-[hsl(var(--bg-hover))] transition-colors shadow-lg"
+        )}
+        aria-label="Open menu"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
+
+      {/* Mobile Overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
+        />
       )}
-    >
+
+      {/* Sidebar */}
+      <div
+        className={cn(
+          // Base styles
+          "relative flex h-full flex-col border-r transition-all duration-300",
+          "bg-[hsl(var(--bg-surface))]",
+          "border-[hsl(var(--border-default))]",
+          // Desktop styles
+          "hidden lg:flex",
+          collapsed ? "w-16" : "w-60",
+        )}
+      >
+        {renderSidebarContent(pathname, collapsed, setCollapsed)}
+      </div>
+
+      {/* Mobile Sidebar */}
+      <div
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r lg:hidden",
+          "bg-[hsl(var(--bg-surface))]",
+          "border-[hsl(var(--border-default))]",
+          "transition-transform duration-300 ease-out",
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        {/* Mobile Close Button */}
+        <button
+          onClick={() => setMobileOpen(false)}
+          className={cn(
+            "absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-lg",
+            "text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text-primary))]",
+            "hover:bg-[hsl(var(--bg-hover))] transition-colors"
+          )}
+          aria-label="Close menu"
+        >
+          <X className="h-5 w-5" />
+        </button>
+
+        {renderSidebarContent(pathname, false, setCollapsed, true, setMobileOpen)}
+      </div>
+    </>
+  );
+}
+
+function renderSidebarContent(
+  pathname: string,
+  collapsed: boolean,
+  setCollapsed: (v: boolean) => void,
+  isMobile: boolean = false,
+  closeMobile?: (v: boolean) => void
+) {
+  return (
+    <>
       {/* Logo */}
       <div
         className={cn(
           "flex h-16 items-center border-b",
-          collapsed ? "justify-center px-2" : "px-4",
+          collapsed && !isMobile ? "justify-center px-2" : "px-4",
           "border-[hsl(var(--border-default))]"
         )}
       >
-        <AgentOpsLogo collapsed={collapsed} />
+        <AgentOpsLogo collapsed={collapsed && !isMobile} />
       </div>
 
       {/* Navigation */}
@@ -192,7 +290,7 @@ export function Sidebar() {
         {navigationSections.map((section) => (
           <div key={section.label} className="mb-4">
             {/* Section label */}
-            {!collapsed && (
+            {(!collapsed || isMobile) && (
               <div className="section-label">{section.label}</div>
             )}
 
@@ -207,16 +305,17 @@ export function Sidebar() {
                   <Link
                     key={item.name}
                     href={item.href}
-                    title={collapsed ? item.name : undefined}
+                    title={collapsed && !isMobile ? item.name : undefined}
+                    onClick={() => isMobile && closeMobile?.(false)}
                     className={cn(
                       "group flex items-center gap-2.5 rounded-lg text-sm font-medium transition-all duration-150",
-                      collapsed
+                      collapsed && !isMobile
                         ? "justify-center px-2 py-2"
                         : "px-3 py-2",
                       isActive
                         ? cn(
                             "bg-[hsl(var(--bg-selected))] text-[hsl(var(--primary))]",
-                            !collapsed && "border-l-2 border-[hsl(var(--primary))] -ml-[2px] pl-[calc(0.75rem+2px)]"
+                            (!collapsed || isMobile) && "border-l-2 border-[hsl(var(--primary))] -ml-[2px] pl-[calc(0.75rem+2px)]"
                           )
                         : "text-[hsl(var(--text-secondary))] hover:bg-[hsl(var(--bg-hover))] hover:text-[hsl(var(--text-primary))]"
                     )}
@@ -229,7 +328,7 @@ export function Sidebar() {
                           : "text-[hsl(var(--text-muted))] group-hover:text-[hsl(var(--text-primary))]"
                       )}
                     />
-                    {!collapsed && (
+                    {(!collapsed || isMobile) && (
                       <>
                         <span className="flex-1 truncate">{item.name}</span>
                         {item.badge && (
@@ -260,7 +359,7 @@ export function Sidebar() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
           </span>
-          {!collapsed && (
+          {(!collapsed || isMobile) && (
             <span className="text-xs font-medium text-[hsl(var(--text-muted))]">
               All systems operational
             </span>
@@ -278,17 +377,18 @@ export function Sidebar() {
         {/* Settings */}
         <Link
           href="/settings"
-          title={collapsed ? "Settings" : undefined}
+          title={collapsed && !isMobile ? "Settings" : undefined}
+          onClick={() => isMobile && closeMobile?.(false)}
           className={cn(
             "group mb-2 flex items-center gap-2.5 rounded-lg text-sm font-medium transition-all duration-150",
-            collapsed ? "justify-center px-2 py-2" : "px-3 py-2",
+            collapsed && !isMobile ? "justify-center px-2 py-2" : "px-3 py-2",
             pathname === "/settings"
               ? "bg-[hsl(var(--bg-selected))] text-[hsl(var(--primary))]"
               : "text-[hsl(var(--text-secondary))] hover:bg-[hsl(var(--bg-hover))] hover:text-[hsl(var(--text-primary))]"
           )}
         >
           <Settings className="h-4 w-4 shrink-0" />
-          {!collapsed && <span>Settings</span>}
+          {(!collapsed || isMobile) && <span>Settings</span>}
         </Link>
 
         {/* User profile & logout */}
@@ -307,7 +407,7 @@ export function Sidebar() {
           >
             <User className="h-4 w-4 text-white" />
           </div>
-          {!collapsed && (
+          {(!collapsed || isMobile) && (
             <>
               <div className="flex-1 min-w-0">
                 <div className="truncate text-sm font-medium text-[hsl(var(--text-primary))]">
@@ -328,24 +428,26 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Collapse toggle */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className={cn(
-          "absolute -right-3 top-20 flex h-6 w-6 items-center justify-center rounded-full transition-all duration-200",
-          "bg-[hsl(var(--bg-elevated))] border border-[hsl(var(--border-default))]",
-          "text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text-primary))]",
-          "hover:border-[hsl(var(--border-strong))]",
-          "shadow-md"
-        )}
-        title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-      >
-        {collapsed ? (
-          <ChevronRight className="h-3.5 w-3.5" />
-        ) : (
-          <ChevronLeft className="h-3.5 w-3.5" />
-        )}
-      </button>
-    </div>
+      {/* Collapse toggle (desktop only) */}
+      {!isMobile && (
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className={cn(
+            "absolute -right-3 top-20 flex h-6 w-6 items-center justify-center rounded-full transition-all duration-200",
+            "bg-[hsl(var(--bg-elevated))] border border-[hsl(var(--border-default))]",
+            "text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text-primary))]",
+            "hover:border-[hsl(var(--border-strong))]",
+            "shadow-md"
+          )}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? (
+            <ChevronRight className="h-3.5 w-3.5" />
+          ) : (
+            <ChevronLeft className="h-3.5 w-3.5" />
+          )}
+        </button>
+      )}
+    </>
   );
 }

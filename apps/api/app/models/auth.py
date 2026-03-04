@@ -102,3 +102,24 @@ class ResetPasswordConfirm(BaseSchema):
     """Confirm password reset."""
     token: str
     new_password: str = Field(..., min_length=8)
+
+
+# ============================================================================
+# Password Reset Flow
+# ============================================================================
+
+class ForgotPasswordRequest(BaseSchema):
+    """Request password reset OTP."""
+    email: EmailStr
+
+
+class VerifyResetCodeRequest(BaseSchema):
+    """Verify reset code and get reset token."""
+    email: EmailStr
+    code: str = Field(..., min_length=6, max_length=6)
+
+
+class VerifyResetCodeResponse(BaseSchema):
+    """Response with reset token."""
+    reset_token: str
+    expires_in: int = 600  # 10 minutes

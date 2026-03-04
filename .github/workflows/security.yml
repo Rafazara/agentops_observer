@@ -1,0 +1,108 @@
+name: Security Scan
+
+on:
+    schedule:
+        # Every Monday at 9am UTC
+        - cron: "0 9 * * 1"
+    push:
+        branches: [main]
+    workflow_dispatch:
+
+jobs:
+    # =========================================================================
+    # Python Security Scan
+    # =========================================================================
+    python-security:
+        name: Python Security
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.12"
+
+            - name: Install security tools
+              run: |
+                  pip install bandit safety pip-audit
+
+            - name: Run Bandit (code scan)
+              working-directory: apps/api
+              run: |
+                  bandit -r app/ -ll -ii -x tests/ || true
+
+            - name: Run Safety (dependency check)
+              working-directory: apps/api
+              run: |
+                  pip install -e .
+                  safety check --full-report || true
+
+            - name: Run pip-audit
+              working-directory: apps/api
+              run: |
+                  pip-audit || true
+
+    # =========================================================================
+    # JavaScript Security Scan
+    # =========================================================================
+    javascript-security:
+        name: JavaScript Security
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+
+            - name: Audit frontend dependencies
+              working-directory: apps/web
+              run: |
+                  npm audit --audit-level=high || true
+
+            - name: Audit SDK dependencies
+              working-directory: packages/sdk-typescript
+              run: |
+                  npm audit --audit-level=high 2>/dev/null || true
+
+    # =========================================================================
+    # Secret Scanning
+    # =========================================================================
+    secret-scan:
+        name: Secret Scan
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: TruffleHog scan
+              uses: trufflesecurity/trufflehog@main
+              with:
+                  path: ./
+                  extra_args: --only-verified
+
+    # =========================================================================
+    # Dependency Review (on PRs only)
+    # =========================================================================
+    dependency-review:
+        name: Dependency Review
+        runs-on: ubuntu-latest
+        if: github.event_name == 'pull_request'
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Dependency Review
+              uses: actions/dependency-review-action@v4
+              with:
+                  fail-on-severity: high

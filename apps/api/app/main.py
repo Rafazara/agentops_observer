@@ -4,12 +4,15 @@ AgentOps Observer API - Main Application
 Enterprise-grade observability platform for autonomous AI agents.
 """
 
+import os
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import ORJSONResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 import structlog
 
 from app import __version__
@@ -17,6 +20,31 @@ from app.core.config import settings
 from app.core.database import db
 from app.core.cache import cache
 from app.core.logging import setup_logging
+from app.core.rate_limiter import limiter, rate_limit_exceeded_handler
+from app.core.csrf import CSRFMiddleware
+
+# Initialize Sentry if DSN is configured
+if settings.sentry_dsn:
+    import sentry_sdk
+    from sentry_sdk.integrations.fastapi import FastApiIntegration
+    from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+    from sentry_sdk.integrations.redis import RedisIntegration
+    
+    sentry_sdk.init(
+        dsn=settings.sentry_dsn,
+        environment=settings.app_env,
+        integrations=[
+            FastApiIntegration(transaction_style="endpoint"),
+            SqlalchemyIntegration(),
+            RedisIntegration(),
+        ],
+        traces_sample_rate=0.1,  # Sample 10% of transactions
+        profiles_sample_rate=0.1,  # Sample 10% for profiling
+        send_default_pii=False,  # GDPR compliance - no PII
+        attach_stacktrace=True,
+        release=f"agentops-api@{__version__}",
+    )
+    structlog.get_logger(__name__).info("Sentry initialized", dsn=settings.sentry_dsn[:20] + "...")
 
 # Import routers
 from app.routes import (
@@ -83,10 +111,17 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Add rate limiter state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+
 
 # ============================================================================
 # Middleware
 # ============================================================================
+
+# CSRF Protection (must be added before CORS)
+app.add_middleware(CSRFMiddleware)
 
 # CORS
 app.add_middleware(

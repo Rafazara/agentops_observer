@@ -1,0 +1,72 @@
+{
+  "name": "@agentops/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for AgentOps Observer - AI agent observability platform",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "agentops",
+    "observability",
+    "ai-agents",
+    "llm",
+    "monitoring",
+    "tracing",
+    "openai",
+    "langchain",
+    "anthropic"
+  ],
+  "author": "AgentOps Team <team@agentops.observer>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agentops-ai/agentops-observer.git",
+    "directory": "packages/sdk-typescript"
+  },
+  "homepage": "https://agentops.observer",
+  "bugs": {
+    "url": "https://github.com/agentops-ai/agentops-observer/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.1.0"
+  },
+  "peerDependencies": {
+    "openai": ">=4.0.0",
+    "@langchain/core": ">=0.1.0"
+  },
+  "peerDependenciesMeta": {
+    "openai": {
+      "optional": true
+    },
+    "@langchain/core": {
+      "optional": true
+    }
+  }
+}
