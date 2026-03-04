@@ -2,16 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================================
+   AGENTOPS OBSERVER DESIGN SYSTEM
+   Inspired by Amplitude, Mixpanel, Firebase, and Userpilot
+   ============================================================================ */
+
 @layer base {
   :root {
+    /* Light mode - keeping minimal for dark-first app */
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 231 77% 64%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
     --muted: 240 4.8% 95.9%;
@@ -26,35 +32,81 @@
     --warning-foreground: 0 0% 0%;
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
+    --ring: 231 77% 64%;
     --radius: 0.5rem;
   }
 
   .dark {
-    /* Premium dark theme - Linear/Vercel inspired */
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 6%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 6%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 50%;
-    --destructive-foreground: 0 0% 98%;
-    --success: 142 71% 45%;
-    --success-foreground: 0 0% 9%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 9%;
-    --border: 0 0% 14%;
-    --input: 0 0% 14%;
-    --ring: 0 0% 83.1%;
+    /* ===== PREMIUM DARK THEME - Amplitude/Mixpanel Inspired ===== */
+    
+    /* Background hierarchy */
+    --bg-base: 222 47% 4%;           /* #080A0F - Deepest background */
+    --bg-surface: 222 30% 7%;        /* #0F1117 - Cards, panels */
+    --bg-elevated: 220 25% 12%;      /* #161B27 - Modals, dropdowns */
+    --bg-hover: 220 22% 16%;         /* #1E2435 - Hover states */
+    --bg-selected: 217 40% 18%;      /* #1A2744 - Selected rows */
+    
+    /* Border hierarchy */
+    --border-subtle: 220 22% 16%;    /* #1E2435 - Subtle separators */
+    --border-default: 218 20% 20%;   /* #252D3D - Default borders */
+    --border-strong: 217 16% 28%;    /* #374151 - Emphasized borders */
+    
+    /* Primary - Mixpanel Blue */
+    --primary: 231 77% 64%;          /* #4F6EF7 */
+    --primary-hover: 231 77% 56%;    /* #3D5CE0 */
+    --primary-subtle: 217 40% 18%;   /* #1A2744 - Light bg for primary elements */
+    
+    /* Semantic colors */
+    --success: 142 71% 45%;          /* #22C55E */
+    --success-subtle: 142 76% 7%;    /* #052E16 */
+    --warning: 38 92% 50%;           /* #F59E0B */
+    --warning-subtle: 40 100% 5%;    /* #1C1000 */
+    --danger: 0 84% 60%;             /* #EF4444 */
+    --danger-subtle: 0 60% 10%;      /* #2D0A0A */
+    --info: 189 94% 43%;             /* #06B6D4 */
+    --info-subtle: 195 80% 10%;      /* #082532 */
+    
+    /* Text hierarchy */
+    --text-primary: 210 40% 98%;     /* #F8FAFC */
+    --text-secondary: 215 16% 62%;   /* #94A3B8 */
+    --text-muted: 215 16% 40%;       /* #475569 */
+    --text-disabled: 217 19% 27%;    /* #334155 */
+    
+    /* Chart palette - Amplitude inspired */
+    --chart-1: 231 77% 64%;          /* #4F6EF7 - Blue */
+    --chart-2: 142 71% 45%;          /* #22C55E - Green */
+    --chart-3: 38 92% 50%;           /* #F59E0B - Orange */
+    --chart-4: 330 80% 60%;          /* #EC4899 - Pink */
+    --chart-5: 262 67% 56%;          /* #8B5CF6 - Purple */
+    --chart-6: 189 94% 43%;          /* #06B6D4 - Cyan */
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
+    --shadow-glow-primary: 0 0 20px rgba(79,110,247,0.15);
+    
+    /* Map to existing Tailwind variables */
+    --background: var(--bg-base);
+    --foreground: var(--text-primary);
+    --card: var(--bg-surface);
+    --card-foreground: var(--text-primary);
+    --popover: var(--bg-elevated);
+    --popover-foreground: var(--text-primary);
+    --primary-foreground: 0 0% 100%;
+    --secondary: var(--bg-surface);
+    --secondary-foreground: var(--text-primary);
+    --muted: var(--bg-hover);
+    --muted-foreground: var(--text-secondary);
+    --accent: var(--bg-hover);
+    --accent-foreground: var(--text-primary);
+    --destructive: var(--danger);
+    --destructive-foreground: 0 0% 100%;
+    --success-foreground: 0 0% 100%;
+    --warning-foreground: 0 0% 0%;
+    --border: var(--border-default);
+    --input: var(--bg-surface);
+    --ring: var(--primary);
   }
 }
 
@@ -73,9 +125,35 @@
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+  
+  /* Typography enhancements */
+  .font-display {
+    letter-spacing: -0.02em;
+  }
+  
+  /* Tabular numbers for metrics */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+  
+  /* Table headers - Mixpanel style */
+  .table-header {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: hsl(var(--text-muted));
+  }
+  
+  /* Chart labels */
+  .chart-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: hsl(var(--text-muted));
+  }
 }
 
-/* Premium scrollbar */
+/* Premium scrollbar - Amplitude style */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -86,12 +164,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.2);
+  background: hsl(var(--border-strong));
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.4);
+  background: hsl(var(--text-muted));
 }
 
 /* Custom selection color */
@@ -99,40 +177,69 @@
   background: hsl(var(--primary) / 0.2);
 }
 
-/* Table row hover states */
+/* ============================================================================
+   COMPONENT STYLES
+   ============================================================================ */
+
 @layer components {
+  /* Table row hover - Amplitude Events table */
   .table-row-hover {
-    @apply transition-colors duration-150;
+    @apply transition-all duration-150;
   }
   
   .table-row-hover:hover {
-    @apply bg-muted/50;
+    background: hsl(var(--bg-hover));
+    transform: translateX(2px);
   }
 
-  /* Premium card hover */
+  /* Premium card hover - Firebase/Amplitude style */
   .card-hover {
     @apply transition-all duration-200;
+    border: 1px solid hsl(var(--border-default));
   }
   
   .card-hover:hover {
-    @apply border-muted-foreground/20 shadow-lg shadow-black/5;
+    border-color: hsl(var(--border-strong));
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
   }
 
-  /* Metric card */
+  /* Metric card - KPI style */
   .metric-card {
     @apply relative overflow-hidden;
+    background: hsl(var(--bg-surface));
+    border: 1px solid hsl(var(--border-default));
+    border-radius: 12px;
+    padding: 20px;
   }
 
   .metric-card::before {
     content: "";
-    @apply absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity duration-300;
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.05) 0%, transparent 60%);
   }
 
   .metric-card:hover::before {
     @apply opacity-100;
   }
 
-  /* Status dot pulse animation */
+  /* KPI number - Large metric display */
+  .kpi-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: hsl(var(--text-primary));
+  }
+
+  /* Status dot with pulse animation */
+  .status-dot {
+    @apply relative;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
   .status-dot-pulse {
     @apply relative;
   }
@@ -144,12 +251,24 @@
     opacity: 0.75;
   }
 
-  /* Gradient text */
-  .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-foreground to-muted-foreground;
+  /* Badge/Pills - Mixpanel style */
+  .badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 600;
   }
 
-  /* Live indicator */
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background: linear-gradient(135deg, hsl(var(--text-primary)) 0%, hsl(var(--text-secondary)) 100%);
+  }
+
+  /* Live indicator - Real-time badge */
   .live-indicator {
     @apply relative flex items-center gap-1.5;
   }
@@ -157,6 +276,103 @@
   .live-indicator::before {
     content: "";
     @apply h-2 w-2 rounded-full bg-emerald-500 animate-pulse;
+  }
+
+  /* Sidebar nav item - Amplitude/Userpilot style */
+  .nav-item {
+    @apply flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150;
+    color: hsl(var(--text-secondary));
+  }
+
+  .nav-item:hover {
+    background: hsl(var(--bg-hover));
+    color: hsl(var(--text-primary));
+  }
+
+  .nav-item-active {
+    background: hsl(var(--bg-selected));
+    color: hsl(var(--text-primary));
+    border-left: 2px solid hsl(var(--primary));
+    margin-left: -2px;
+    padding-left: calc(0.75rem + 2px);
+  }
+
+  /* Section label - Sidebar groups */
+  .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: hsl(var(--text-muted));
+    padding: 0 12px;
+    margin-top: 20px;
+    margin-bottom: 8px;
+  }
+
+  /* Button variants */
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg font-medium transition-all duration-150;
+    height: 36px;
+    padding: 0 16px;
+    background: hsl(var(--primary));
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: hsl(var(--primary-hover));
+  }
+
+  .btn-primary:active {
+    transform: scale(0.98);
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-lg font-medium transition-all duration-150;
+    height: 36px;
+    padding: 0 16px;
+    background: transparent;
+    border: 1px solid hsl(var(--border-default));
+    color: hsl(var(--text-primary));
+  }
+
+  .btn-secondary:hover {
+    background: hsl(var(--bg-hover));
+    border-color: hsl(var(--border-strong));
+  }
+
+  /* Input fields - Amplitude style */
+  .input-field {
+    @apply rounded-lg transition-all duration-150;
+    height: 36px;
+    padding: 0 12px;
+    background: hsl(var(--bg-base));
+    border: 1px solid hsl(var(--border-default));
+    color: hsl(var(--text-primary));
+  }
+
+  .input-field::placeholder {
+    color: hsl(var(--text-disabled));
+  }
+
+  .input-field:focus {
+    outline: none;
+    border-color: hsl(var(--primary));
+    box-shadow: var(--shadow-glow-primary);
+  }
+
+  /* Tooltip - Custom recharts style */
+  .chart-tooltip {
+    background: hsl(var(--bg-elevated)) !important;
+    border: 1px solid hsl(var(--border-default)) !important;
+    border-radius: 8px !important;
+    padding: 12px !important;
+    box-shadow: var(--shadow-lg) !important;
+  }
+
+  /* Focus ring for accessibility */
+  .focus-ring:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--bg-base)), 0 0 0 4px hsl(var(--primary));
   }
 }
 
@@ -274,9 +490,9 @@
   .animate-shimmer {
     background: linear-gradient(
       90deg,
-      hsl(var(--muted)) 0%,
-      hsl(var(--muted-foreground) / 0.1) 50%,
-      hsl(var(--muted)) 100%
+      hsl(var(--bg-surface)) 0%,
+      hsl(var(--bg-hover)) 50%,
+      hsl(var(--bg-surface)) 100%
     );
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;

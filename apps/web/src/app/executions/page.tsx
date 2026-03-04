@@ -89,7 +89,7 @@ export default function ExecutionsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen">
+      <div className="flex h-screen bg-[hsl(var(--bg-base))]">
         <Sidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Header />
@@ -103,17 +103,17 @@ export default function ExecutionsPage() {
 
   if (isError) {
     return (
-      <div className="flex h-screen">
+      <div className="flex h-screen bg-[hsl(var(--bg-base))]">
         <Sidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Header />
           <main className="flex-1 overflow-auto p-6">
-            <Card className="border-destructive/50 bg-destructive/5">
+            <Card className="border-[hsl(var(--error))] bg-[hsl(var(--error-subtle))]">
               <CardContent className="p-6 flex items-center gap-3">
-                <AlertCircle className="h-5 w-5 text-destructive" />
+                <AlertCircle className="h-5 w-5 text-[hsl(var(--error))]" />
                 <div>
-                  <p className="font-medium text-destructive">Failed to load executions</p>
-                  <p className="text-sm text-muted-foreground">{error?.message || "An error occurred"}</p>
+                  <p className="font-medium text-[hsl(var(--error))]">Failed to load executions</p>
+                  <p className="text-sm text-[hsl(var(--text-muted))]">{error?.message || "An error occurred"}</p>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => refetch()} className="ml-auto">
                   Retry
@@ -127,18 +127,18 @@ export default function ExecutionsPage() {
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-[hsl(var(--bg-base))]">
       <PageTitle title="Executions" />
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header />
         <main className="flex-1 overflow-auto p-6">
-          <div className="space-y-4 animate-fade-in">
+          <div className="space-y-5 animate-fade-in">
             {/* Page header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight">Executions</h1>
-                <p className="text-sm text-muted-foreground">
+                <h1 className="text-2xl font-semibold tracking-tight text-[hsl(var(--text-primary))]">Executions</h1>
+                <p className="text-sm text-[hsl(var(--text-muted))] mt-1">
                   Monitor and analyze agent execution history
                 </p>
               </div>
@@ -155,18 +155,18 @@ export default function ExecutionsPage() {
             </div>
 
             {/* Filters */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <div className="relative flex-1 max-w-xs">
-                <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[hsl(var(--text-muted))]" />
                 <input
                   type="text"
                   placeholder="Search executions..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-8 w-full rounded-md border border-border/50 bg-background pl-8 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/60"
+                  className="input-field w-full pl-10 pr-3"
                 />
               </div>
-              <div className="flex items-center gap-1 rounded-md border border-border/50 p-0.5">
+              <div className="flex items-center gap-1 rounded-lg border border-[hsl(var(--border-default))] bg-[hsl(var(--bg-surface))] p-1">
                 {statusFilters.map((filter) => (
                   <button
                     key={filter.label}
@@ -175,16 +175,16 @@ export default function ExecutionsPage() {
                       setCursor(undefined); // Reset pagination
                     }}
                     className={cn(
-                      "flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition-colors",
+                      "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
                       statusFilter === filter.value
-                        ? "bg-accent text-accent-foreground"
-                        : "text-muted-foreground hover:text-foreground"
+                        ? "bg-[hsl(var(--bg-selected))] text-[hsl(var(--primary))] shadow-sm"
+                        : "text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text-primary))] hover:bg-[hsl(var(--bg-hover))]"
                     )}
                   >
                     {filter.label}
                     <span className={cn(
                       "tabular-nums",
-                      statusFilter === filter.value ? "text-accent-foreground/70" : "text-muted-foreground/50"
+                      statusFilter === filter.value ? "text-[hsl(var(--primary))]" : "text-[hsl(var(--text-disabled))]"
                     )}>
                       {filter.count}
                     </span>
@@ -203,34 +203,34 @@ export default function ExecutionsPage() {
                     <div className="overflow-x-auto">
                       <table className="w-full">
                         <thead>
-                          <tr className="border-b border-border/50 bg-muted/30">
-                            <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          <tr className="border-b border-[hsl(var(--border-default))] bg-[hsl(var(--bg-base))]">
+                            <th className="table-header px-5 py-3 text-left">
                               Agent
                             </th>
-                            <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <th className="table-header px-5 py-3 text-left">
                               Status
                             </th>
-                            <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <th className="table-header px-5 py-3 text-left">
                               Env
                             </th>
-                            <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <th className="table-header px-5 py-3 text-right">
                               LLM
                             </th>
-                            <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <th className="table-header px-5 py-3 text-right">
                               Tokens
                             </th>
-                            <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <th className="table-header px-5 py-3 text-right">
                               Duration
                             </th>
-                            <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <th className="table-header px-5 py-3 text-right">
                               Cost
                             </th>
-                            <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <th className="table-header px-5 py-3 text-right">
                               Started
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-border/30">
+                        <tbody className="divide-y divide-[hsl(var(--border-subtle))]">
                           {filteredExecutions.map((exec, index) => (
                             <tr
                               key={exec.execution_id}
@@ -239,48 +239,48 @@ export default function ExecutionsPage() {
                                 `stagger-${Math.min(index + 1, 6)}`
                               )}
                             >
-                              <td className="px-4 py-3">
+                              <td className="px-5 py-3">
                                 <Link
                                   href={`/executions/${exec.execution_id}`}
                                   className="group/link flex items-center gap-1"
                                 >
-                                  <span className="text-sm font-medium group-hover/link:text-primary transition-colors">
+                                  <span className="text-sm font-medium text-[hsl(var(--text-primary))] group-hover/link:text-[hsl(var(--primary))] transition-colors">
                                     {agentNameMap[exec.agent_id] || exec.agent_id}
                                   </span>
-                                  <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover/link:opacity-100 transition-opacity" />
+                                  <ExternalLink className="h-3 w-3 text-[hsl(var(--text-muted))] opacity-0 group-hover/link:opacity-100 transition-opacity" />
                                 </Link>
-                                <p className="text-xs text-muted-foreground/70 font-mono">
+                                <p className="text-[10px] text-[hsl(var(--text-disabled))] font-mono mt-0.5">
                                   {exec.execution_id}
                                 </p>
                               </td>
-                              <td className="px-4 py-3">
+                              <td className="px-5 py-3">
                                 <StatusBadge status={exec.status} showDot />
                               </td>
-                              <td className="px-4 py-3">
-                                <span className="inline-flex items-center rounded border border-border/50 bg-muted/30 px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
+                              <td className="px-5 py-3">
+                                <span className="inline-flex items-center rounded-md border border-[hsl(var(--border-default))] bg-[hsl(var(--bg-hover))] px-2 py-0.5 text-xs font-medium text-[hsl(var(--text-secondary))]">
                                   {exec.environment}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 text-right">
-                                <span className="text-sm tabular-nums">{exec.llm_calls_count}</span>
+                              <td className="px-5 py-3 text-right">
+                                <span className="text-sm tabular-nums text-[hsl(var(--text-primary))]">{exec.llm_calls_count}</span>
                               </td>
-                              <td className="px-4 py-3 text-right">
-                                <span className="text-sm tabular-nums text-muted-foreground">
+                              <td className="px-5 py-3 text-right">
+                                <span className="text-sm tabular-nums text-[hsl(var(--text-muted))]">
                                   {exec.total_tokens.toLocaleString()}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 text-right">
-                                <span className="text-sm font-mono tabular-nums">
+                              <td className="px-5 py-3 text-right">
+                                <span className="text-sm font-mono tabular-nums text-[hsl(var(--text-primary))]">
                                   {formatDuration(exec.duration_ms)}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 text-right">
-                                <span className="text-sm font-mono tabular-nums">
+                              <td className="px-5 py-3 text-right">
+                                <span className="text-sm font-mono tabular-nums text-[hsl(var(--success))]">
                                   ${exec.total_cost_usd.toFixed(4)}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 text-right">
-                                <RelativeTime date={exec.started_at} className="text-xs" />
+                              <td className="px-5 py-3 text-right">
+                                <RelativeTime date={exec.started_at} className="text-xs text-[hsl(var(--text-muted))]" />
                               </td>
                             </tr>
                           ))}
@@ -289,10 +289,10 @@ export default function ExecutionsPage() {
                     </div>
 
                     {/* Pagination */}
-                    <div className="flex items-center justify-between border-t border-border/50 px-4 py-2.5 bg-muted/20">
-                      <p className="text-xs text-muted-foreground">
-                        Showing <span className="font-medium text-foreground">{filteredExecutions.length}</span> executions
-                        {isFetching && <span className="ml-2 text-muted-foreground/50">Loading...</span>}
+                    <div className="flex items-center justify-between border-t border-[hsl(var(--border-default))] px-5 py-3 bg-[hsl(var(--bg-base))]">
+                      <p className="text-xs text-[hsl(var(--text-muted))]">
+                        Showing <span className="font-semibold text-[hsl(var(--text-primary))]">{filteredExecutions.length}</span> executions
+                        {isFetching && <span className="ml-2 text-[hsl(var(--text-disabled))]">Loading...</span>}
                       </p>
                       <div className="flex items-center gap-1">
                         <Button 
@@ -304,7 +304,7 @@ export default function ExecutionsPage() {
                         >
                           <ChevronLeft className="h-3.5 w-3.5" />
                         </Button>
-                        <span className="text-xs text-muted-foreground px-2">
+                        <span className="text-xs text-[hsl(var(--text-muted))] px-2">
                           {hasMore ? "More available" : "All loaded"}
                         </span>
                         <Button 

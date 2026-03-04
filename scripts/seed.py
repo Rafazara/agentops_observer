@@ -15,7 +15,6 @@ Usage:
 import asyncio
 import os
 import random
-import ssl
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -104,11 +103,20 @@ INCIDENT_TITLES = [
 
 
 async def create_pool() -> asyncpg.Pool:
-    """Create database connection pool with SSL."""
-    ssl_context = ssl.create_default_context()
+    """Create database connection pool."""
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL is not set")
+    
+    # Extract host for safe logging (hide credentials)
+    try:
+        db_host = DATABASE_URL.split("@")[1].split("/")[0]
+        print(f"Connecting to: {db_host}")
+    except Exception:
+        print("Connecting to database...")
+    
     return await asyncpg.create_pool(
         DATABASE_URL,
-        ssl=ssl_context,
+        ssl=True,
         min_size=2,
         max_size=10,
     )

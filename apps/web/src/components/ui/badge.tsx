@@ -1,30 +1,32 @@
 import { cn } from "@/lib/utils";
 
 interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: "default" | "secondary" | "destructive" | "outline" | "success" | "warning";
+  variant?: "default" | "secondary" | "destructive" | "outline" | "success" | "warning" | "info";
+  size?: "sm" | "md";
 }
 
 export function Badge({
   className,
   variant = "default",
+  size = "md",
   ...props
 }: BadgeProps) {
   return (
     <div
       className={cn(
-        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+        "inline-flex items-center rounded-full font-semibold transition-colors",
+        // Size variants
+        size === "sm" && "px-1.5 py-0.5 text-[10px]",
+        size === "md" && "px-2.5 py-0.5 text-xs",
+        // Color variants - Mixpanel style subtle backgrounds
         {
-          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80":
-            variant === "default",
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80":
-            variant === "secondary",
-          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80":
-            variant === "destructive",
-          "text-foreground": variant === "outline",
-          "border-transparent bg-success text-success-foreground hover:bg-success/80":
-            variant === "success",
-          "border-transparent bg-warning text-warning-foreground hover:bg-warning/80":
-            variant === "warning",
+          "bg-[hsl(var(--primary))] text-white": variant === "default",
+          "bg-[hsl(var(--bg-hover))] text-[hsl(var(--text-secondary))] border border-[hsl(var(--border-default))]": variant === "secondary",
+          "bg-[hsl(var(--error-subtle))] text-[hsl(var(--error))]": variant === "destructive",
+          "bg-transparent border border-[hsl(var(--border-default))] text-[hsl(var(--text-secondary))]": variant === "outline",
+          "bg-[hsl(var(--success-subtle))] text-[hsl(var(--success))]": variant === "success",
+          "bg-[hsl(var(--warning-subtle))] text-[hsl(var(--warning))]": variant === "warning",
+          "bg-[hsl(var(--info-subtle))] text-[hsl(var(--info))]": variant === "info",
         },
         className
       )}

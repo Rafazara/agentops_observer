@@ -28,114 +28,102 @@ interface StatusBadgeProps {
 
 const statusConfig: Record<
   string,
-  { bg: string; border: string; text: string; dot: string }
+  { bg: string; text: string; dot: string }
 > = {
-  // Semantic statuses
+  // Success states
   success: {
-    bg: "bg-emerald-500/10",
-    border: "border-l-emerald-500",
-    text: "text-emerald-500",
-    dot: "bg-emerald-500",
+    bg: "bg-[hsl(var(--success-subtle))]",
+    text: "text-[hsl(var(--success))]",
+    dot: "bg-[hsl(var(--success))]",
   },
   completed: {
-    bg: "bg-emerald-500/10",
-    border: "border-l-emerald-500",
-    text: "text-emerald-500",
-    dot: "bg-emerald-500",
+    bg: "bg-[hsl(var(--success-subtle))]",
+    text: "text-[hsl(var(--success))]",
+    dot: "bg-[hsl(var(--success))]",
   },
   resolved: {
-    bg: "bg-emerald-500/10",
-    border: "border-l-emerald-500",
-    text: "text-emerald-500",
-    dot: "bg-emerald-500",
+    bg: "bg-[hsl(var(--success-subtle))]",
+    text: "text-[hsl(var(--success))]",
+    dot: "bg-[hsl(var(--success))]",
   },
 
+  // Warning states
   warning: {
-    bg: "bg-amber-500/10",
-    border: "border-l-amber-500",
-    text: "text-amber-500",
-    dot: "bg-amber-500",
+    bg: "bg-[hsl(var(--warning-subtle))]",
+    text: "text-[hsl(var(--warning))]",
+    dot: "bg-[hsl(var(--warning))]",
   },
   pending: {
-    bg: "bg-amber-500/10",
-    border: "border-l-amber-500",
-    text: "text-amber-500",
-    dot: "bg-amber-500",
+    bg: "bg-[hsl(var(--warning-subtle))]",
+    text: "text-[hsl(var(--warning))]",
+    dot: "bg-[hsl(var(--warning))]",
   },
   acknowledged: {
-    bg: "bg-amber-500/10",
-    border: "border-l-amber-500",
-    text: "text-amber-500",
-    dot: "bg-amber-500",
+    bg: "bg-[hsl(var(--warning-subtle))]",
+    text: "text-[hsl(var(--warning))]",
+    dot: "bg-[hsl(var(--warning))]",
   },
   high: {
-    bg: "bg-amber-500/10",
-    border: "border-l-amber-500",
-    text: "text-amber-500",
-    dot: "bg-amber-500",
+    bg: "bg-[hsl(var(--warning-subtle))]",
+    text: "text-[hsl(var(--warning))]",
+    dot: "bg-[hsl(var(--warning))]",
   },
 
+  // Error/Critical states
   error: {
-    bg: "bg-red-500/10",
-    border: "border-l-red-500",
-    text: "text-red-500",
-    dot: "bg-red-500",
+    bg: "bg-[hsl(var(--error-subtle))]",
+    text: "text-[hsl(var(--error))]",
+    dot: "bg-[hsl(var(--error))]",
   },
   failed: {
-    bg: "bg-red-500/10",
-    border: "border-l-red-500",
-    text: "text-red-500",
-    dot: "bg-red-500",
+    bg: "bg-[hsl(var(--error-subtle))]",
+    text: "text-[hsl(var(--error))]",
+    dot: "bg-[hsl(var(--error))]",
   },
   open: {
-    bg: "bg-red-500/10",
-    border: "border-l-red-500",
-    text: "text-red-500",
-    dot: "bg-red-500",
+    bg: "bg-[hsl(var(--error-subtle))]",
+    text: "text-[hsl(var(--error))]",
+    dot: "bg-[hsl(var(--error))]",
   },
   critical: {
-    bg: "bg-red-500/10",
-    border: "border-l-red-500",
-    text: "text-red-500",
-    dot: "bg-red-500",
+    bg: "bg-[hsl(var(--error-subtle))]",
+    text: "text-[hsl(var(--error))]",
+    dot: "bg-[hsl(var(--error))]",
   },
 
+  // Info/Running states
   info: {
-    bg: "bg-blue-500/10",
-    border: "border-l-blue-500",
-    text: "text-blue-500",
-    dot: "bg-blue-500",
+    bg: "bg-[hsl(var(--info-subtle))]",
+    text: "text-[hsl(var(--info))]",
+    dot: "bg-[hsl(var(--info))]",
   },
   running: {
-    bg: "bg-blue-500/10",
-    border: "border-l-blue-500",
-    text: "text-blue-500",
-    dot: "bg-blue-500 animate-pulse",
+    bg: "bg-[hsl(var(--info-subtle))]",
+    text: "text-[hsl(var(--info))]",
+    dot: "bg-[hsl(var(--info))] animate-pulse",
   },
 
+  // Neutral states
   neutral: {
-    bg: "bg-zinc-500/10",
-    border: "border-l-zinc-500",
-    text: "text-zinc-400",
-    dot: "bg-zinc-500",
+    bg: "bg-[hsl(var(--bg-hover))]",
+    text: "text-[hsl(var(--text-muted))]",
+    dot: "bg-[hsl(var(--text-muted))]",
   },
   medium: {
-    bg: "bg-zinc-500/10",
-    border: "border-l-zinc-500",
-    text: "text-zinc-400",
-    dot: "bg-zinc-500",
+    bg: "bg-[hsl(var(--bg-hover))]",
+    text: "text-[hsl(var(--text-muted))]",
+    dot: "bg-[hsl(var(--text-muted))]",
   },
   low: {
-    bg: "bg-zinc-500/10",
-    border: "border-l-zinc-500",
-    text: "text-zinc-400",
-    dot: "bg-zinc-500",
+    bg: "bg-[hsl(var(--bg-hover))]",
+    text: "text-[hsl(var(--text-disabled))]",
+    dot: "bg-[hsl(var(--text-disabled))]",
   },
 };
 
 const sizeClasses = {
-  sm: "text-xs px-2 py-0.5",
-  md: "text-sm px-2.5 py-1",
+  sm: "text-[10px] px-2 py-0.5",
+  md: "text-xs px-2.5 py-1",
   lg: "text-sm px-3 py-1.5",
 };
 
@@ -152,16 +140,15 @@ export function StatusBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded border-l-2 font-medium capitalize",
+        "inline-flex items-center gap-1.5 rounded-full font-semibold uppercase tracking-wide",
         config.bg,
-        config.border,
         config.text,
         sizeClasses[size],
         className
       )}
     >
       {showDot && (
-        <span className={cn("h-1.5 w-1.5 rounded-full", config.dot)} />
+        <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", config.dot)} />
       )}
       {label}
     </span>

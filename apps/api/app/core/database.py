@@ -7,7 +7,6 @@ All queries use raw SQL for maximum performance and control.
 
 import asyncio
 import os
-import ssl
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator
 
@@ -36,7 +35,7 @@ class Database:
         Create and configure the connection pool.
         
         Should be called during application startup.
-        Uses SSL context for secure Supabase connections.
+        Supabase pooler handles TLS termination.
         """
         if self._pool is not None:
             return
@@ -46,28 +45,21 @@ class Database:
                 return
             
             if not self.database_url:
-                raise RuntimeError("DATABASE_URL environment variable is not set")
+                raise RuntimeError("DATABASE_URL is not set")
             
-            # Mask password for logging
-            masked_url = self.database_url
-            if "@" in masked_url:
-                parts = masked_url.split("@")
-                if ":" in parts[0]:
-                    cred_parts = parts[0].rsplit(":", 1)
-                    masked_url = f"{cred_parts[0]}:****@{parts[1]}"
+            logger.info("Connecting to database...")
             
-            logger.info(
-                "Attempting database connection",
-                url=masked_url,
-            )
+            # Extract host for safe logging (hide credentials)
+            try:
+                db_host = self.database_url.split("@")[1].split("/")[0]
+                logger.info(f"Database host: {db_host}")
+            except Exception:
+                pass
             
             try:
-                # Create SSL context for secure connection
-                ssl_context = ssl.create_default_context()
-                
                 self._pool = await asyncpg.create_pool(
                     self.database_url,
-                    ssl=ssl_context,
+                    ssl=True,
                     min_size=1,
                     max_size=5,
                     command_timeout=60,
@@ -76,11 +68,7 @@ class Database:
                 logger.info("Database connection established successfully")
                 
             except Exception as e:
-                logger.error(
-                    "Database connection failed",
-                    error=str(e),
-                    error_type=type(e).__name__,
-                )
+                logger.error(f"Database connection failed: {e}")
                 raise RuntimeError(f"Failed to connect to database: {e}") from e
     
     async def disconnect(self) -> None:

@@ -63,7 +63,7 @@ export default function AgentsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen">
+      <div className="flex h-screen bg-[hsl(var(--bg-base))]">
         <Sidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Header />
@@ -77,17 +77,17 @@ export default function AgentsPage() {
 
   if (isError) {
     return (
-      <div className="flex h-screen">
+      <div className="flex h-screen bg-[hsl(var(--bg-base))]">
         <Sidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Header />
           <main className="flex-1 overflow-auto p-6">
-            <Card className="border-destructive/50 bg-destructive/5">
+            <Card className="border-[hsl(var(--error))]/50 bg-[hsl(var(--error-subtle))]">
               <CardContent className="p-6 flex items-center gap-3">
-                <AlertCircle className="h-5 w-5 text-destructive" />
+                <AlertCircle className="h-5 w-5 text-[hsl(var(--error))]" />
                 <div>
-                  <p className="font-medium text-destructive">Failed to load agents</p>
-                  <p className="text-sm text-muted-foreground">{error?.message || "An error occurred"}</p>
+                  <p className="font-medium text-[hsl(var(--error))]">Failed to load agents</p>
+                  <p className="text-sm text-[hsl(var(--text-muted))]">{error?.message || "An error occurred"}</p>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => refetch()} className="ml-auto">
                   Retry
@@ -101,7 +101,7 @@ export default function AgentsPage() {
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-[hsl(var(--bg-base))]">
       <PageTitle title="Agents" />
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
@@ -111,8 +111,8 @@ export default function AgentsPage() {
             {/* Page header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight">Agents</h1>
-                <p className="text-sm text-muted-foreground">
+                <h1 className="text-2xl font-semibold tracking-tight text-[hsl(var(--text-primary))]">Agents</h1>
+                <p className="text-sm text-[hsl(var(--text-muted))]">
                   Manage and monitor your AI agent fleet
                 </p>
               </div>
@@ -139,14 +139,14 @@ export default function AgentsPage() {
               <Card className="metric-card">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    <span className="text-xs font-medium text-[hsl(var(--text-muted))] uppercase tracking-wider">
                       Active Agents
                     </span>
-                    <Bot className="h-4 w-4 text-muted-foreground/50" />
+                    <Bot className="h-4 w-4 text-[hsl(var(--text-disabled))]" />
                   </div>
                   <div className="flex items-baseline gap-1">
-                    <CountUpNumber value={activeAgents.length} className="text-2xl font-semibold" />
-                    <span className="text-sm text-muted-foreground">
+                    <CountUpNumber value={activeAgents.length} className="text-2xl font-semibold text-[hsl(var(--text-primary))]" />
+                    <span className="text-sm text-[hsl(var(--text-muted))]">
                       / {agents.length}
                     </span>
                   </div>
@@ -155,37 +155,37 @@ export default function AgentsPage() {
               <Card className="metric-card">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    <span className="text-xs font-medium text-[hsl(var(--text-muted))] uppercase tracking-wider">
                       Total Executions
                     </span>
-                    <Activity className="h-4 w-4 text-muted-foreground/50" />
+                    <Activity className="h-4 w-4 text-[hsl(var(--text-disabled))]" />
                   </div>
-                  <CountUpNumber value={totalExecutions} className="text-2xl font-semibold" />
+                  <CountUpNumber value={totalExecutions} className="text-2xl font-semibold text-[hsl(var(--text-primary))]" />
                 </CardContent>
               </Card>
               <Card className="metric-card">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    <span className="text-xs font-medium text-[hsl(var(--text-muted))] uppercase tracking-wider">
                       Avg Success Rate
                     </span>
-                    <TrendingUp className="h-4 w-4 text-muted-foreground/50" />
+                    <TrendingUp className="h-4 w-4 text-[hsl(var(--text-disabled))]" />
                   </div>
                   <div className="flex items-baseline">
-                    <CountUpNumber value={avgSuccessRate} className="text-2xl font-semibold" />
-                    <span className="text-lg font-semibold">%</span>
+                    <CountUpNumber value={avgSuccessRate} className="text-2xl font-semibold text-[hsl(var(--text-primary))]" />
+                    <span className="text-lg font-semibold text-[hsl(var(--text-primary))]">%</span>
                   </div>
                 </CardContent>
               </Card>
               <Card className="metric-card">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    <span className="text-xs font-medium text-[hsl(var(--text-muted))] uppercase tracking-wider">
                       Total Cost
                     </span>
-                    <DollarSign className="h-4 w-4 text-muted-foreground/50" />
+                    <DollarSign className="h-4 w-4 text-[hsl(var(--text-disabled))]" />
                   </div>
-                  <CountUpCurrency value={totalCost} className="text-2xl font-semibold" />
+                  <CountUpCurrency value={totalCost} className="text-2xl font-semibold text-[hsl(var(--text-primary))]" />
                 </CardContent>
               </Card>
             </div>
@@ -234,7 +234,7 @@ export default function AgentsPage() {
                       </div>
                     </CardHeader>
                     <CardContent className="pt-0">
-                      <p className="text-xs text-muted-foreground mb-4 line-clamp-2">
+                      <p className="text-xs text-[hsl(var(--text-muted))] mb-4 line-clamp-2">
                         {agent.description || "No description available"}
                       </p>
                       
@@ -243,46 +243,46 @@ export default function AgentsPage() {
                         <QualityScore score={Math.round(agent.success_rate)} size={48} />
                         <div className="flex-1 grid grid-cols-2 gap-x-4 gap-y-2">
                           <div>
-                            <div className="flex items-center gap-1 text-muted-foreground">
+                            <div className="flex items-center gap-1 text-[hsl(var(--text-muted))]">
                               <Zap className="h-3 w-3" />
                               <span className="text-xs">Runs</span>
                             </div>
-                            <span className="text-sm font-medium tabular-nums">
+                            <span className="text-sm font-medium tabular-nums text-[hsl(var(--text-primary))]">
                               {agent.total_executions}
                             </span>
                           </div>
                           <div>
-                            <div className="flex items-center gap-1 text-muted-foreground">
+                            <div className="flex items-center gap-1 text-[hsl(var(--text-muted))]">
                               <TrendingUp className="h-3 w-3" />
                               <span className="text-xs">Success</span>
                             </div>
-                            <span className="text-sm font-medium tabular-nums">
+                            <span className="text-sm font-medium tabular-nums text-[hsl(var(--text-primary))]">
                               {agent.success_rate.toFixed(1)}%
                             </span>
                           </div>
                           <div>
-                            <div className="flex items-center gap-1 text-muted-foreground">
+                            <div className="flex items-center gap-1 text-[hsl(var(--text-muted))]">
                               <DollarSign className="h-3 w-3" />
                               <span className="text-xs">Avg Cost</span>
                             </div>
-                            <span className="text-sm font-medium font-mono tabular-nums">
+                            <span className="text-sm font-medium font-mono tabular-nums text-[hsl(var(--text-primary))]">
                               ${agent.avg_cost_per_execution.toFixed(4)}
                             </span>
                           </div>
                           <div>
-                            <div className="flex items-center gap-1 text-muted-foreground">
+                            <div className="flex items-center gap-1 text-[hsl(var(--text-muted))]">
                               <Activity className="h-3 w-3" />
                               <span className="text-xs">Env</span>
                             </div>
-                            <span className="text-sm font-medium tabular-nums capitalize">
+                            <span className="text-sm font-medium tabular-nums capitalize text-[hsl(var(--text-primary))]">
                               {agent.environment}
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between pt-3 border-t border-border/50">
-                        <span className="text-xs text-muted-foreground">
+                      <div className="flex items-center justify-between pt-3 border-t border-[hsl(var(--border-subtle))]">
+                        <span className="text-xs text-[hsl(var(--text-muted))]">
                           Last run: {agent.last_execution_at ? <RelativeTime date={agent.last_execution_at} /> : "Never"}
                         </span>
                         <div className="flex gap-1">

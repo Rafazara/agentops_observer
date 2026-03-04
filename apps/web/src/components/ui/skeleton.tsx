@@ -9,7 +9,7 @@ export function Skeleton({ className, ...props }: SkeletonProps) {
   return (
     <div
       className={cn(
-        "animate-pulse rounded-md bg-muted/50",
+        "animate-shimmer rounded-md bg-[hsl(var(--bg-hover))]",
         className
       )}
       {...props}
@@ -22,7 +22,7 @@ export function SkeletonCard({ className }: SkeletonProps) {
   return (
     <div
       className={cn(
-        "rounded-lg border border-border bg-card p-4 space-y-3",
+        "rounded-xl border border-[hsl(var(--border-default))] bg-[hsl(var(--bg-surface))] p-5 space-y-3",
         className
       )}
     >
@@ -37,7 +37,7 @@ export function SkeletonMetricCard({ className }: SkeletonProps) {
   return (
     <div
       className={cn(
-        "rounded-lg border border-border bg-card p-6 space-y-4",
+        "rounded-xl border border-[hsl(var(--border-default))] bg-[hsl(var(--bg-surface))] p-5 space-y-4",
         className
       )}
     >

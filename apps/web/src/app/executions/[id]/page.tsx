@@ -249,21 +249,21 @@ const mockExecution: ExecutionData = {
 // ============================================================================
 
 const EVENT_CONFIG: Record<EventType, { color: string; bgColor: string; icon: React.ElementType; label: string }> = {
-  llm_call: { color: "#6366F1", bgColor: "bg-indigo-500/20", icon: MessageSquare, label: "LLM Call" },
-  tool_call: { color: "#10B981", bgColor: "bg-emerald-500/20", icon: Wrench, label: "Tool Call" },
-  planning: { color: "#F59E0B", bgColor: "bg-amber-500/20", icon: Brain, label: "Planning" },
-  error: { color: "#EF4444", bgColor: "bg-red-500/20", icon: AlertTriangle, label: "Error" },
-  memory: { color: "#8B5CF6", bgColor: "bg-purple-500/20", icon: Database, label: "Memory" },
+  llm_call: { color: "hsl(var(--chart-1))", bgColor: "bg-[hsl(var(--chart-1))]/20", icon: MessageSquare, label: "LLM Call" },
+  tool_call: { color: "hsl(var(--success))", bgColor: "bg-[hsl(var(--success-subtle))]", icon: Wrench, label: "Tool Call" },
+  planning: { color: "hsl(var(--warning))", bgColor: "bg-[hsl(var(--warning-subtle))]", icon: Brain, label: "Planning" },
+  error: { color: "hsl(var(--error))", bgColor: "bg-[hsl(var(--error-subtle))]", icon: AlertTriangle, label: "Error" },
+  memory: { color: "hsl(var(--chart-3))", bgColor: "bg-[hsl(var(--chart-3))]/20", icon: Database, label: "Memory" },
 };
 
 const MODEL_CONFIG: Record<string, { color: string; label: string }> = {
-  "gpt-4o": { color: "#10A37F", label: "GPT-4o" },
-  "gpt-4-turbo": { color: "#10A37F", label: "GPT-4 Turbo" },
-  "gpt-3.5-turbo": { color: "#10A37F", label: "GPT-3.5" },
-  "claude-3-opus": { color: "#D97706", label: "Claude 3 Opus" },
-  "claude-3.5-sonnet": { color: "#D97706", label: "Claude 3.5 Sonnet" },
-  "gemini-pro": { color: "#4285F4", label: "Gemini Pro" },
-  "mistral-large": { color: "#FF7000", label: "Mistral Large" },
+  "gpt-4o": { color: "hsl(var(--success))", label: "GPT-4o" },
+  "gpt-4-turbo": { color: "hsl(var(--success))", label: "GPT-4 Turbo" },
+  "gpt-3.5-turbo": { color: "hsl(var(--success))", label: "GPT-3.5" },
+  "claude-3-opus": { color: "hsl(var(--warning))", label: "Claude 3 Opus" },
+  "claude-3.5-sonnet": { color: "hsl(var(--warning))", label: "Claude 3.5 Sonnet" },
+  "gemini-pro": { color: "hsl(var(--info))", label: "Gemini Pro" },
+  "mistral-large": { color: "hsl(var(--chart-2))", label: "Mistral Large" },
 };
 
 function formatMs(ms: number): string {
@@ -301,19 +301,19 @@ function CollapsibleSection({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="border border-zinc-800 rounded-lg overflow-hidden">
+    <div className="border border-[hsl(var(--border-default))] rounded-lg overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-zinc-900/50 hover:bg-zinc-800/50 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3 bg-[hsl(var(--bg-surface))] hover:bg-[hsl(var(--bg-hover))] transition-colors"
       >
-        <span className="text-sm font-medium text-zinc-300">{title}</span>
+        <span className="text-sm font-medium text-[hsl(var(--text-secondary))]">{title}</span>
         {isOpen ? (
-          <ChevronUp className="w-4 h-4 text-zinc-500" />
+          <ChevronUp className="w-4 h-4 text-[hsl(var(--text-muted))]" />
         ) : (
-          <ChevronDown className="w-4 h-4 text-zinc-500" />
+          <ChevronDown className="w-4 h-4 text-[hsl(var(--text-muted))]" />
         )}
       </button>
-      {isOpen && <div className="p-4 bg-zinc-950/50">{children}</div>}
+      {isOpen && <div className="p-4 bg-[hsl(var(--bg-base))]">{children}</div>}
     </div>
   );
 }
@@ -325,11 +325,11 @@ function SyntaxHighlight({ content, language = "json" }: { content: string; lang
       try {
         const formatted = JSON.stringify(JSON.parse(content), null, 2);
         return formatted
-          .replace(/"([^"]+)":/g, '<span class="text-purple-400">"$1"</span>:')
-          .replace(/: "([^"]+)"/g, ': <span class="text-emerald-400">"$1"</span>')
-          .replace(/: (\d+\.?\d*)/g, ': <span class="text-amber-400">$1</span>')
-          .replace(/: (true|false)/g, ': <span class="text-blue-400">$1</span>')
-          .replace(/: (null)/g, ': <span class="text-zinc-500">$1</span>');
+          .replace(/"([^"]+)":/g, '<span class="text-[hsl(var(--chart-3))]">"$1"</span>:')
+          .replace(/: "([^"]+)"/g, ': <span class="text-[hsl(var(--success))]">"$1"</span>')
+          .replace(/: (\d+\.?\d*)/g, ': <span class="text-[hsl(var(--warning))]">$1</span>')
+          .replace(/: (true|false)/g, ': <span class="text-[hsl(var(--info))]">$1</span>')
+          .replace(/: (null)/g, ': <span class="text-[hsl(var(--text-disabled))]">$1</span>');
       } catch {
         return content;
       }
@@ -338,7 +338,7 @@ function SyntaxHighlight({ content, language = "json" }: { content: string; lang
   }, [content, language]);
 
   return (
-    <pre className="text-xs font-mono leading-relaxed overflow-x-auto p-3 bg-zinc-950 rounded-lg border border-zinc-800">
+    <pre className="text-xs font-mono leading-relaxed overflow-x-auto p-3 bg-[hsl(var(--bg-base))] rounded-lg border border-[hsl(var(--border-default))]">
       <code dangerouslySetInnerHTML={{ __html: highlighted }} />
     </pre>
   );
@@ -358,9 +358,9 @@ function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) 
       variant="outline"
       size="sm"
       onClick={handleCopy}
-      className="gap-2 bg-zinc-900 border-zinc-700 hover:bg-zinc-800"
+      className="gap-2 bg-[hsl(var(--bg-surface))] border-[hsl(var(--border-default))] hover:bg-[hsl(var(--bg-hover))]"
     >
-      {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+      {copied ? <Check className="w-3 h-3 text-[hsl(var(--success))]" /> : <Copy className="w-3 h-3" />}
       {copied ? "Copied!" : label}
     </Button>
   );
@@ -410,14 +410,14 @@ function InteractiveTimeline({
                 y1={8}
                 x2={0}
                 y2={svgHeight - PADDING}
-                stroke="#27272a"
+                className="stroke-[hsl(var(--border-subtle))]"
                 strokeDasharray="4,4"
               />
               <text
                 x={0}
                 y={0}
                 textAnchor="middle"
-                className="fill-zinc-500 text-[10px]"
+                className="fill-[hsl(var(--text-muted))] text-[10px]"
               >
                 {formatMs(pct * totalDuration)}
               </text>
@@ -454,7 +454,7 @@ function InteractiveTimeline({
                 rx={6}
                 className={cn(
                   "transition-all duration-150",
-                  isSelected ? "fill-zinc-800" : isHovered ? "fill-zinc-850" : "fill-transparent"
+                  isSelected ? "fill-[hsl(var(--bg-selected))]" : isHovered ? "fill-[hsl(var(--bg-hover))]" : "fill-transparent"
                 )}
               />
 
@@ -468,7 +468,7 @@ function InteractiveTimeline({
                 <text
                   x={28}
                   y={4}
-                  className="fill-zinc-200 text-xs font-medium"
+                  className="fill-[hsl(var(--text-primary))] text-xs font-medium"
                   style={{ dominantBaseline: "middle" }}
                 >
                   {event.name.length > 18 ? event.name.slice(0, 18) + "..." : event.name}
@@ -493,7 +493,7 @@ function InteractiveTimeline({
               <text
                 x={LABEL_WIDTH + timelineWidth + PADDING * 2}
                 y={BAR_HEIGHT / 2}
-                className="fill-zinc-400 text-[11px] font-mono"
+                className="fill-[hsl(var(--text-muted))] text-[11px] font-mono"
                 style={{ dominantBaseline: "middle" }}
               >
                 {formatMs(event.duration_ms)}
@@ -502,7 +502,7 @@ function InteractiveTimeline({
                 <text
                   x={LABEL_WIDTH + timelineWidth + PADDING * 2 + 50}
                   y={BAR_HEIGHT / 2}
-                  className="fill-emerald-500 text-[11px] font-mono"
+                  className="fill-[hsl(var(--success))] text-[11px] font-mono"
                   style={{ dominantBaseline: "middle" }}
                 >
                   {formatCost(event.cost_usd)}
@@ -533,13 +533,13 @@ function InteractiveTimeline({
               width={180}
               height={36}
               rx={6}
-              className="fill-zinc-900"
-              stroke="#3f3f46"
+              className="fill-[hsl(var(--bg-elevated))]"
+              stroke="hsl(var(--border-default))"
             />
-            <text x={10} y={16} className="fill-zinc-200 text-xs font-medium">
+            <text x={10} y={16} className="fill-[hsl(var(--text-primary))] text-xs font-medium">
               {hoveredEvent.name}
             </text>
-            <text x={10} y={28} className="fill-zinc-500 text-[10px]">
+            <text x={10} y={28} className="fill-[hsl(var(--text-muted))] text-[10px]">
               {formatMs(hoveredEvent.start_ms)} → {formatMs(hoveredEvent.start_ms + hoveredEvent.duration_ms)}
               {hoveredEvent.cost_usd && ` • ${formatCost(hoveredEvent.cost_usd)}`}
             </text>
@@ -557,11 +557,11 @@ function InteractiveTimeline({
 function EventInspector({ event }: { event: TimelineEvent | null }) {
   if (!event) {
     return (
-      <div className="h-full flex items-center justify-center text-zinc-500">
+      <div className="h-full flex items-center justify-center text-[hsl(var(--text-muted))]">
         <div className="text-center">
           <Sparkles className="w-12 h-12 mx-auto mb-3 opacity-30" />
           <p className="text-sm">Select an event from the timeline</p>
-          <p className="text-xs text-zinc-600 mt-1">to view detailed information</p>
+          <p className="text-xs text-[hsl(var(--text-disabled))] mt-1">to view detailed information</p>
         </div>
       </div>
     );
@@ -587,14 +587,14 @@ function EventInspector({ event }: { event: TimelineEvent | null }) {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-zinc-800">
+      <div className="px-5 py-4 border-b border-[hsl(var(--border-default))]">
         <div className="flex items-center gap-3 mb-2">
           <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", config.bgColor)}>
             <Icon className="w-4 h-4" style={{ color: config.color }} />
           </div>
           <div>
-            <h3 className="text-base font-semibold text-zinc-100">{event.name}</h3>
-            <p className="text-xs text-zinc-500">{config.label} • {formatMs(event.duration_ms)}</p>
+            <h3 className="text-base font-semibold text-[hsl(var(--text-primary))]">{event.name}</h3>
+            <p className="text-xs text-[hsl(var(--text-muted))]">{config.label} • {formatMs(event.duration_ms)}</p>
           </div>
         </div>
       </div>
@@ -608,7 +608,7 @@ function EventInspector({ event }: { event: TimelineEvent | null }) {
             {event.model && (
               <div className="flex items-center gap-3">
                 <ModelBadge model={event.model} />
-                <span className="text-xs text-zinc-500">
+                <span className="text-xs text-[hsl(var(--text-muted))]">
                   T={event.temperature} • max={event.max_tokens}
                 </span>
               </div>
@@ -616,14 +616,14 @@ function EventInspector({ event }: { event: TimelineEvent | null }) {
 
             {/* Cost breakdown */}
             {event.cost_usd && (
-              <div className="p-3 bg-zinc-900/50 rounded-lg border border-zinc-800">
-                <div className="text-xs text-zinc-500 mb-2">Cost Breakdown</div>
+              <div className="p-3 bg-[hsl(var(--bg-surface))] rounded-lg border border-[hsl(var(--border-default))]">
+                <div className="text-xs text-[hsl(var(--text-muted))] mb-2">Cost Breakdown</div>
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="text-zinc-400">{event.input_tokens?.toLocaleString()} in</span>
-                  <span className="text-zinc-600">×</span>
-                  <span className="text-zinc-400">{event.output_tokens?.toLocaleString()} out</span>
-                  <span className="text-zinc-600">=</span>
-                  <span className="text-emerald-400 font-semibold">{formatCost(event.cost_usd)}</span>
+                  <span className="text-[hsl(var(--text-secondary))]">{event.input_tokens?.toLocaleString()} in</span>
+                  <span className="text-[hsl(var(--text-disabled))]">×</span>
+                  <span className="text-[hsl(var(--text-secondary))]">{event.output_tokens?.toLocaleString()} out</span>
+                  <span className="text-[hsl(var(--text-disabled))]">=</span>
+                  <span className="text-[hsl(var(--success))] font-semibold">{formatCost(event.cost_usd)}</span>
                 </div>
               </div>
             )}
@@ -636,12 +636,12 @@ function EventInspector({ event }: { event: TimelineEvent | null }) {
                     <div key={i} className="space-y-1">
                       <div className={cn(
                         "text-[10px] uppercase tracking-wider font-semibold",
-                        msg.role === "system" ? "text-purple-400" :
-                        msg.role === "user" ? "text-blue-400" : "text-emerald-400"
+                        msg.role === "system" ? "text-[hsl(var(--chart-3))]" :
+                        msg.role === "user" ? "text-[hsl(var(--info))]" : "text-[hsl(var(--success))]"
                       )}>
                         {msg.role}
                       </div>
-                      <div className="text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap bg-zinc-950 rounded p-2 border border-zinc-800">
+                      <div className="text-xs text-[hsl(var(--text-secondary))] leading-relaxed whitespace-pre-wrap bg-[hsl(var(--bg-base))] rounded p-2 border border-[hsl(var(--border-default))]">
                         {msg.content}
                       </div>
                     </div>
@@ -653,7 +653,7 @@ function EventInspector({ event }: { event: TimelineEvent | null }) {
             {/* Output */}
             {event.output && (
               <CollapsibleSection title="Output" defaultOpen>
-                <div className="text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                <div className="text-xs text-[hsl(var(--text-secondary))] leading-relaxed whitespace-pre-wrap">
                   {event.output}
                 </div>
               </CollapsibleSection>
@@ -672,15 +672,15 @@ function EventInspector({ event }: { event: TimelineEvent | null }) {
             {/* Status */}
             <div className="flex items-center gap-3">
               <StatusBadge status={event.success ? "completed" : "failed"} />
-              <span className="text-xs text-zinc-500">{formatMs(event.duration_ms)}</span>
+              <span className="text-xs text-[hsl(var(--text-muted))]">{formatMs(event.duration_ms)}</span>
             </div>
 
             {/* Duration bar */}
-            <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+            <div className="h-2 bg-[hsl(var(--bg-hover))] rounded-full overflow-hidden">
               <div
                 className={cn(
                   "h-full rounded-full transition-all",
-                  event.success ? "bg-emerald-500" : "bg-red-500"
+                  event.success ? "bg-[hsl(var(--success))]" : "bg-[hsl(var(--error))]"
                 )}
                 style={{ width: "100%" }}
               />
@@ -707,16 +707,16 @@ function EventInspector({ event }: { event: TimelineEvent | null }) {
           <>
             {event.reasoning && (
               <div className="space-y-1">
-                <div className="text-xs text-zinc-500 font-medium">Reasoning</div>
-                <div className="text-sm text-zinc-300 leading-relaxed">
+                <div className="text-xs text-[hsl(var(--text-muted))] font-medium">Reasoning</div>
+                <div className="text-sm text-[hsl(var(--text-secondary))] leading-relaxed">
                   {event.reasoning}
                 </div>
               </div>
             )}
             {event.decision && (
               <div className="space-y-1">
-                <div className="text-xs text-zinc-500 font-medium">Decision</div>
-                <div className="text-sm text-amber-400 leading-relaxed">
+                <div className="text-xs text-[hsl(var(--text-muted))] font-medium">Decision</div>
+                <div className="text-sm text-[hsl(var(--warning))] leading-relaxed">
                   {event.decision}
                 </div>
               </div>
@@ -728,14 +728,14 @@ function EventInspector({ event }: { event: TimelineEvent | null }) {
         {event.type === "error" && (
           <>
             {event.error_message && (
-              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                <div className="text-xs text-red-400 font-medium mb-1">Error Message</div>
-                <div className="text-sm text-red-300">{event.error_message}</div>
+              <div className="p-3 bg-[hsl(var(--error-subtle))] border border-[hsl(var(--error))]/30 rounded-lg">
+                <div className="text-xs text-[hsl(var(--error))] font-medium mb-1">Error Message</div>
+                <div className="text-sm text-[hsl(var(--error))]">{event.error_message}</div>
               </div>
             )}
             {event.stack_trace && (
               <CollapsibleSection title="Stack Trace">
-                <pre className="text-xs font-mono text-zinc-400 overflow-x-auto">
+                <pre className="text-xs font-mono text-[hsl(var(--text-muted))] overflow-x-auto">
                   {event.stack_trace}
                 </pre>
               </CollapsibleSection>
@@ -745,7 +745,7 @@ function EventInspector({ event }: { event: TimelineEvent | null }) {
 
         {/* Memory Details */}
         {event.type === "memory" && (
-          <div className="text-sm text-zinc-400">
+          <div className="text-sm text-[hsl(var(--text-muted))]">
             Memory operation completed in {formatMs(event.duration_ms)}
           </div>
         )}
@@ -767,19 +767,19 @@ function AIAnalysis({ analysis }: { analysis: ExecutionData["ai_analysis"] }) {
   ];
 
   return (
-    <div className="border-t border-zinc-800 bg-zinc-900/30">
-      <div className="px-5 py-3 border-b border-zinc-800 flex items-center gap-2">
-        <Sparkles className="w-4 h-4 text-amber-400" />
-        <span className="text-sm font-semibold text-zinc-200">AI Analysis</span>
-        <span className="ml-auto text-xs text-zinc-500">
+    <div className="border-t border-[hsl(var(--border-default))] bg-[hsl(var(--bg-surface))]">
+      <div className="px-5 py-3 border-b border-[hsl(var(--border-default))] flex items-center gap-2">
+        <Sparkles className="w-4 h-4 text-[hsl(var(--warning))]" />
+        <span className="text-sm font-semibold text-[hsl(var(--text-primary))]">AI Analysis</span>
+        <span className="ml-auto text-xs text-[hsl(var(--text-muted))]">
           {analysis.confidence}% confidence
         </span>
       </div>
       <div className="p-5 space-y-4">
         {/* Root cause */}
         <div>
-          <div className="text-xs text-zinc-500 font-medium mb-2">Root Cause</div>
-          <div className="text-sm text-zinc-300 leading-relaxed">
+          <div className="text-xs text-[hsl(var(--text-muted))] font-medium mb-2">Root Cause</div>
+          <div className="text-sm text-[hsl(var(--text-secondary))] leading-relaxed">
             {analysis.root_cause}
           </div>
         </div>
@@ -788,22 +788,22 @@ function AIAnalysis({ analysis }: { analysis: ExecutionData["ai_analysis"] }) {
         <div className="h-48">
           <ResponsiveContainer width="100%" height="100%">
             <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
-              <PolarGrid stroke="#3f3f46" />
+              <PolarGrid stroke="hsl(var(--border-default))" />
               <PolarAngleAxis
                 dataKey="subject"
-                tick={{ fill: "#a1a1aa", fontSize: 11 }}
+                tick={{ fill: "hsl(var(--text-muted))", fontSize: 11 }}
               />
               <PolarRadiusAxis
                 angle={90}
                 domain={[0, 100]}
-                tick={{ fill: "#52525b", fontSize: 9 }}
+                tick={{ fill: "hsl(var(--text-disabled))", fontSize: 9 }}
                 tickCount={5}
               />
               <Radar
                 name="Score"
                 dataKey="value"
-                stroke="#10B981"
-                fill="#10B981"
+                stroke="hsl(var(--success))"
+                fill="hsl(var(--success))"
                 fillOpacity={0.3}
                 strokeWidth={2}
               />
@@ -812,9 +812,9 @@ function AIAnalysis({ analysis }: { analysis: ExecutionData["ai_analysis"] }) {
         </div>
 
         {/* Recommendation */}
-        <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
-          <div className="text-xs text-emerald-400 font-medium mb-1">Recommended Fix</div>
-          <div className="text-sm text-emerald-300 leading-relaxed">
+        <div className="p-3 bg-[hsl(var(--success-subtle))] border border-[hsl(var(--success))]/30 rounded-lg">
+          <div className="text-xs text-[hsl(var(--success))] font-medium mb-1">Recommended Fix</div>
+          <div className="text-sm text-[hsl(var(--success))] leading-relaxed">
             {analysis.recommendation}
           </div>
         </div>
@@ -935,13 +935,13 @@ export default function ExecutionTracePage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="h-screen flex flex-col bg-zinc-950">
-        <div className="flex-shrink-0 h-14 px-4 flex items-center border-b border-zinc-800 bg-zinc-900/50">
+      <div className="h-screen flex flex-col bg-[hsl(var(--bg-base))]">
+        <div className="flex-shrink-0 h-14 px-4 flex items-center border-b border-[hsl(var(--border-default))] bg-[hsl(var(--bg-surface))]">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => router.push("/executions")}
-            className="gap-2 text-zinc-400 hover:text-zinc-100"
+            className="gap-2 text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text-primary))]"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
@@ -949,8 +949,8 @@ export default function ExecutionTracePage() {
         </div>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <Loader2 className="w-8 h-8 animate-spin text-zinc-500 mx-auto mb-3" />
-            <p className="text-zinc-400">Loading execution trace...</p>
+            <Loader2 className="w-8 h-8 animate-spin text-[hsl(var(--text-muted))] mx-auto mb-3" />
+            <p className="text-[hsl(var(--text-secondary))]">Loading execution trace...</p>
           </div>
         </div>
       </div>
@@ -960,13 +960,13 @@ export default function ExecutionTracePage() {
   // Error state
   if (isError || !execution) {
     return (
-      <div className="h-screen flex flex-col bg-zinc-950">
-        <div className="flex-shrink-0 h-14 px-4 flex items-center border-b border-zinc-800 bg-zinc-900/50">
+      <div className="h-screen flex flex-col bg-[hsl(var(--bg-base))]">
+        <div className="flex-shrink-0 h-14 px-4 flex items-center border-b border-[hsl(var(--border-default))] bg-[hsl(var(--bg-surface))]">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => router.push("/executions")}
-            className="gap-2 text-zinc-400 hover:text-zinc-100"
+            className="gap-2 text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text-primary))]"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
@@ -974,9 +974,9 @@ export default function ExecutionTracePage() {
         </div>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <AlertTriangle className="w-8 h-8 text-red-500 mx-auto mb-3" />
-            <p className="text-zinc-200 font-medium mb-1">Failed to load execution</p>
-            <p className="text-zinc-500 text-sm mb-4">{error?.message || "Execution not found"}</p>
+            <AlertTriangle className="w-8 h-8 text-[hsl(var(--error))] mx-auto mb-3" />
+            <p className="text-[hsl(var(--text-primary))] font-medium mb-1">Failed to load execution</p>
+            <p className="text-[hsl(var(--text-muted))] text-sm mb-4">{error?.message || "Execution not found"}</p>
             <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2">
               <RefreshCw className="w-3 h-3" />
               Retry
@@ -988,25 +988,25 @@ export default function ExecutionTracePage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-zinc-950">
+    <div className="h-screen flex flex-col bg-[hsl(var(--bg-base))]">
       {/* Top Bar */}
-      <div className="flex-shrink-0 h-14 px-4 flex items-center justify-between border-b border-zinc-800 bg-zinc-900/50">
+      <div className="flex-shrink-0 h-14 px-4 flex items-center justify-between border-b border-[hsl(var(--border-default))] bg-[hsl(var(--bg-surface))]">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => router.push("/executions")}
-            className="gap-2 text-zinc-400 hover:text-zinc-100"
+            className="gap-2 text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text-primary))]"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
           </Button>
-          <div className="h-6 w-px bg-zinc-800" />
+          <div className="h-6 w-px bg-[hsl(var(--border-default))]" />
           <div className="flex items-center gap-3">
-            <h1 className="text-base font-semibold text-zinc-100">
+            <h1 className="text-base font-semibold text-[hsl(var(--text-primary))]">
               {agentName}
             </h1>
-            <code className="text-xs font-mono text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded">
+            <code className="text-xs font-mono text-[hsl(var(--text-muted))] bg-[hsl(var(--bg-hover))] px-2 py-0.5 rounded">
               {execution.execution_id}
             </code>
             <StatusBadge status={execution.status} />
@@ -1015,15 +1015,15 @@ export default function ExecutionTracePage() {
         <div className="flex items-center gap-6">
           {/* Stats */}
           <div className="flex items-center gap-6 text-sm">
-            <div className="text-zinc-500">
+            <div className="text-[hsl(var(--text-muted))]">
               Duration:{" "}
-              <span className="text-zinc-200 font-medium">
+              <span className="text-[hsl(var(--text-primary))] font-medium">
                 {formatMs(execution.duration_ms)}
               </span>
             </div>
-            <div className="text-zinc-500">
+            <div className="text-[hsl(var(--text-muted))]">
               Cost:{" "}
-              <span className="text-emerald-400 font-medium">
+              <span className="text-[hsl(var(--success))] font-medium">
                 {formatCost(execution.total_cost_usd)}
               </span>
             </div>
@@ -1035,11 +1035,11 @@ export default function ExecutionTracePage() {
           </div>
           {/* Actions */}
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-2 bg-zinc-900 border-zinc-700">
+            <Button variant="outline" size="sm" className="gap-2 bg-[hsl(var(--bg-surface))] border-[hsl(var(--border-default))]">
               <Download className="w-3 h-3" />
               Export
             </Button>
-            <Button variant="outline" size="sm" className="gap-2 bg-zinc-900 border-zinc-700">
+            <Button variant="outline" size="sm" className="gap-2 bg-[hsl(var(--bg-surface))] border-[hsl(var(--border-default))]">
               <ExternalLink className="w-3 h-3" />
               Share
             </Button>
@@ -1050,11 +1050,11 @@ export default function ExecutionTracePage() {
       {/* Main Content */}
       <div className="flex-1 flex min-h-0">
         {/* Left Panel - Timeline */}
-        <div className="w-[65%] border-r border-zinc-800 flex flex-col">
+        <div className="w-[65%] border-r border-[hsl(var(--border-default))] flex flex-col">
           {/* Timeline Header */}
-          <div className="flex-shrink-0 px-5 py-3 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/30">
+          <div className="flex-shrink-0 px-5 py-3 border-b border-[hsl(var(--border-default))] flex items-center justify-between bg-[hsl(var(--bg-surface))]">
             <div className="flex items-center gap-4">
-              <h2 className="text-sm font-semibold text-zinc-200">Execution Timeline</h2>
+              <h2 className="text-sm font-semibold text-[hsl(var(--text-primary))]">Execution Timeline</h2>
               <div className="flex items-center gap-3">
                 {Object.entries(EVENT_CONFIG).map(([type, config]) => (
                   <div key={type} className="flex items-center gap-1.5">
@@ -1062,7 +1062,7 @@ export default function ExecutionTracePage() {
                       className="w-2 h-2 rounded-sm"
                       style={{ backgroundColor: config.color }}
                     />
-                    <span className="text-[10px] text-zinc-500">{config.label}</span>
+                    <span className="text-[10px] text-[hsl(var(--text-muted))]">{config.label}</span>
                   </div>
                 ))}
               </div>
@@ -1094,7 +1094,7 @@ export default function ExecutionTracePage() {
               >
                 <ZoomIn className="w-3.5 h-3.5" />
               </Button>
-              <div className="w-px h-4 bg-zinc-700 mx-1" />
+              <div className="w-px h-4 bg-[hsl(var(--border-default))] mx-1" />
               <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
                 <Maximize2 className="w-3.5 h-3.5" />
               </Button>

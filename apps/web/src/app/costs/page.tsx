@@ -246,16 +246,16 @@ function DeltaBadge({ value, label, isGood }: { value: number; label: string; is
   const showGreen = isGood !== undefined ? isGood : !isPositive;
   
   return (
-    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-800/50 border border-zinc-700/50">
+    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[hsl(var(--bg-hover))] border border-[hsl(var(--border-default))]">
       {isPositive ? (
-        <ArrowUpRight className={cn("w-3.5 h-3.5", showGreen ? "text-emerald-400" : "text-red-400")} />
+        <ArrowUpRight className={cn("w-3.5 h-3.5", showGreen ? "text-[hsl(var(--success))]" : "text-[hsl(var(--error))]")} />
       ) : (
-        <ArrowDownRight className={cn("w-3.5 h-3.5", showGreen ? "text-emerald-400" : "text-red-400")} />
+        <ArrowDownRight className={cn("w-3.5 h-3.5", showGreen ? "text-[hsl(var(--success))]" : "text-[hsl(var(--error))]")} />
       )}
-      <span className={cn("text-sm font-semibold tabular-nums", showGreen ? "text-emerald-400" : "text-red-400")}>
+      <span className={cn("text-sm font-semibold tabular-nums", showGreen ? "text-[hsl(var(--success))]" : "text-[hsl(var(--error))]")}>
         {isPositive ? "+" : ""}{value.toFixed(1)}%
       </span>
-      <span className="text-xs text-zinc-500">{label}</span>
+      <span className="text-xs text-[hsl(var(--text-muted))]">{label}</span>
     </div>
   );
 }
@@ -283,11 +283,11 @@ function MiniCard({
             <Icon className="w-4 h-4" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-[10px] uppercase tracking-wider text-zinc-500 font-medium mb-1">
+            <div className="text-[10px] uppercase tracking-wider text-[hsl(var(--text-muted))] font-medium mb-1">
               {label}
             </div>
-            <div className="text-lg font-semibold text-zinc-100 truncate">{value}</div>
-            {subValue && <div className="text-xs text-zinc-500 mt-0.5">{subValue}</div>}
+            <div className="text-lg font-semibold text-[hsl(var(--text-primary))] truncate">{value}</div>
+            {subValue && <div className="text-xs text-[hsl(var(--text-muted))] mt-0.5">{subValue}</div>}
           </div>
         </div>
       </CardContent>
@@ -308,8 +308,9 @@ function TreemapContent({ x, y, width, height, name, size, efficiency }: {
   if (width < 50 || height < 30) return null;
   
   // Color intensity based on efficiency (higher = less efficient = more red)
+  // Transitions from chart-1 (indigo) to error (red)
   const intensity = Math.min(efficiency / 0.6, 1);
-  const bgColor = `rgba(${Math.round(239 * intensity + 59 * (1 - intensity))}, ${Math.round(68 * intensity + 130 * (1 - intensity))}, ${Math.round(68 * intensity + 246 * (1 - intensity))}, 0.8)`;
+  const bgColor = `hsla(${Math.round(238 * (1 - intensity) + 0 * intensity)}, ${Math.round(84 - intensity * 10)}%, ${Math.round(64 - intensity * 4)}%, 0.8)`;
   
   return (
     <g>
@@ -319,7 +320,7 @@ function TreemapContent({ x, y, width, height, name, size, efficiency }: {
         width={width}
         height={height}
         fill={bgColor}
-        stroke="#27272a"
+        stroke="hsl(240 4% 16%)"
         strokeWidth={1}
         rx={4}
       />
@@ -328,7 +329,7 @@ function TreemapContent({ x, y, width, height, name, size, efficiency }: {
           <text
             x={x + 8}
             y={y + 18}
-            fill="#fff"
+            fill="hsl(0 0% 98%)"
             fontSize={11}
             fontWeight="500"
           >
@@ -337,7 +338,7 @@ function TreemapContent({ x, y, width, height, name, size, efficiency }: {
           <text
             x={x + 8}
             y={y + 32}
-            fill="rgba(255,255,255,0.7)"
+            fill="hsla(0, 0%, 98%, 0.7)"
             fontSize={10}
           >
             ${size.toFixed(0)}
@@ -354,25 +355,25 @@ function CostTooltip({ active, payload, label }: { active?: boolean; payload?: A
   
   const data = payload[0].payload;
   return (
-    <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-3 shadow-xl">
-      <div className="text-xs text-zinc-400 mb-2">{label}</div>
-      <div className="text-lg font-semibold text-zinc-100 mb-2">${data.cost.toFixed(2)}</div>
+    <div className="chart-tooltip">
+      <div className="text-xs text-[hsl(var(--text-muted))] mb-2">{label}</div>
+      <div className="text-lg font-semibold text-[hsl(var(--text-primary))] mb-2">${data.cost.toFixed(2)}</div>
       <div className="space-y-1">
         <div className="flex items-center justify-between gap-4 text-xs">
-          <span className="text-indigo-400">● GPT-4o</span>
-          <span className="text-zinc-300 tabular-nums">${data.breakdown.gpt4o.toFixed(2)}</span>
+          <span className="text-[hsl(var(--chart-1))]">● GPT-4o</span>
+          <span className="text-[hsl(var(--text-secondary))] tabular-nums">${data.breakdown.gpt4o.toFixed(2)}</span>
         </div>
         <div className="flex items-center justify-between gap-4 text-xs">
-          <span className="text-amber-400">● Claude</span>
-          <span className="text-zinc-300 tabular-nums">${data.breakdown.claude.toFixed(2)}</span>
+          <span className="text-[hsl(var(--chart-2))]">● Claude</span>
+          <span className="text-[hsl(var(--text-secondary))] tabular-nums">${data.breakdown.claude.toFixed(2)}</span>
         </div>
         <div className="flex items-center justify-between gap-4 text-xs">
-          <span className="text-zinc-500">● Other</span>
-          <span className="text-zinc-300 tabular-nums">${data.breakdown.other.toFixed(2)}</span>
+          <span className="text-[hsl(var(--text-muted))]">● Other</span>
+          <span className="text-[hsl(var(--text-secondary))] tabular-nums">${data.breakdown.other.toFixed(2)}</span>
         </div>
       </div>
       {data.cost > data.budget && (
-        <div className="mt-2 pt-2 border-t border-zinc-700 text-xs text-red-400">
+        <div className="mt-2 pt-2 border-t border-[hsl(var(--border-subtle))] text-xs text-[hsl(var(--error))]">
           ⚠ Over budget by ${(data.cost - data.budget).toFixed(2)}
         </div>
       )}
@@ -464,7 +465,7 @@ export default function CostsPage() {
 
   if (isLoading || !displayData || !miniCardData) {
     return (
-      <div className="flex h-screen">
+      <div className="flex h-screen bg-[hsl(var(--bg-base))]">
         <Sidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Header />
@@ -497,17 +498,17 @@ export default function CostsPage() {
 
   if (isError) {
     return (
-      <div className="flex h-screen">
+      <div className="flex h-screen bg-[hsl(var(--bg-base))]">
         <Sidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Header />
           <main className="flex-1 overflow-auto p-6">
-            <Card className="border-destructive/50 bg-destructive/5">
+            <Card className="border-[hsl(var(--error))]/50 bg-[hsl(var(--error-subtle))]">
               <CardContent className="p-6 flex items-center gap-3">
-                <AlertCircle className="h-5 w-5 text-destructive" />
+                <AlertCircle className="h-5 w-5 text-[hsl(var(--error))]" />
                 <div>
-                  <p className="font-medium text-destructive">Failed to load costs</p>
-                  <p className="text-sm text-muted-foreground">{error?.message || "An error occurred"}</p>
+                  <p className="font-medium text-[hsl(var(--error))]">Failed to load costs</p>
+                  <p className="text-sm text-[hsl(var(--text-muted))]">{error?.message || "An error occurred"}</p>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => refetch()} className="ml-auto">
                   Retry
@@ -521,7 +522,7 @@ export default function CostsPage() {
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-[hsl(var(--bg-base))]">
       <PageTitle title="Costs" />
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
@@ -533,10 +534,10 @@ export default function CostsPage() {
               {/* Hero Number */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <h1 className="text-sm font-medium text-zinc-500 uppercase tracking-wider">
+                  <h1 className="text-sm font-medium text-[hsl(var(--text-muted))] uppercase tracking-wider">
                     Total Cost
                   </h1>
-                  <span className="text-xs text-zinc-600">
+                  <span className="text-xs text-[hsl(var(--text-disabled))]">
                     {selectedPeriod === "today" ? "Today" : 
                      selectedPeriod === "7d" ? "Last 7 Days" :
                      selectedPeriod === "30d" ? "Last 30 Days" :
@@ -544,7 +545,7 @@ export default function CostsPage() {
                   </span>
                 </div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-5xl font-bold tracking-tight text-zinc-100">
+                  <span className="text-5xl font-bold tracking-tight text-[hsl(var(--text-primary))]">
                     $<CountUp value={displayData.totalCost} decimals={2} />
                   </span>
                 </div>
@@ -552,12 +553,12 @@ export default function CostsPage() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <DeltaBadge value={displayData.vsPrevious} label="vs prev period" />
                   <DeltaBadge value={displayData.vsLastMonth} label="vs last month" isGood={displayData.vsLastMonth < 0} />
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-800/50 border border-zinc-700/50">
-                    <TrendingUp className="w-3.5 h-3.5 text-amber-400" />
-                    <span className="text-sm font-semibold tabular-nums text-amber-400">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[hsl(var(--bg-hover))] border border-[hsl(var(--border-default))]">
+                    <TrendingUp className="w-3.5 h-3.5 text-[hsl(var(--warning))]" />
+                    <span className="text-sm font-semibold tabular-nums text-[hsl(var(--warning))]">
                       ${displayData.projectedMonthEnd.toLocaleString()}
                     </span>
-                    <span className="text-xs text-zinc-500">month-end</span>
+                    <span className="text-xs text-[hsl(var(--text-muted))]">month-end</span>
                   </div>
                 </div>
               </div>
@@ -567,7 +568,7 @@ export default function CostsPage() {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="h-9 bg-zinc-900 border-zinc-700"
+                  className="h-9 bg-[hsl(var(--bg-surface))] border-[hsl(var(--border-default))]"
                   onClick={() => refetch()}
                   disabled={isFetching}
                 >
@@ -577,14 +578,14 @@ export default function CostsPage() {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="h-9 bg-zinc-900 border-zinc-700"
+                  className="h-9 bg-[hsl(var(--bg-surface))] border-[hsl(var(--border-default))]"
                   onClick={() => exportCosts.mutate({ period: selectedPeriod })}
                   disabled={exportCosts.isPending}
                 >
                   <Download className="h-3.5 w-3.5 mr-1.5" />
                   Export CSV
                 </Button>
-                <div className="flex items-center gap-0.5 rounded-lg border border-zinc-800 bg-zinc-900/50 p-1">
+                <div className="flex items-center gap-0.5 rounded-lg border border-[hsl(var(--border-default))] bg-[hsl(var(--bg-surface))] p-1">
                   {periods.map((period) => (
                     <button
                       key={period.value}
@@ -592,8 +593,8 @@ export default function CostsPage() {
                       className={cn(
                         "px-4 py-2 rounded-md text-sm font-medium transition-all",
                         selectedPeriod === period.value
-                          ? "bg-zinc-700 text-zinc-100 shadow-sm"
-                          : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50"
+                          ? "bg-[hsl(var(--bg-selected))] text-[hsl(var(--primary))] shadow-sm"
+                          : "text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text-primary))] hover:bg-[hsl(var(--bg-hover))]"
                       )}
                     >
                       {period.label}
@@ -608,7 +609,7 @@ export default function CostsPage() {
               <MiniCard
                 icon={Bot}
                 label="Most Expensive Agent"
-                iconColor="bg-indigo-500/20 text-indigo-400"
+                iconColor="bg-[hsl(var(--chart-1))]/20 text-[hsl(var(--chart-1))]"
                 value={miniCardData.mostExpensiveAgent.name}
                 subValue={`$${miniCardData.mostExpensiveAgent.cost.toLocaleString()}`}
                 className="animate-fade-in-up stagger-1"
@@ -616,14 +617,14 @@ export default function CostsPage() {
               <MiniCard
                 icon={Cpu}
                 label="Most Expensive Model"
-                iconColor="bg-emerald-500/20 text-emerald-400"
+                iconColor="bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]"
                 value={miniCardData.mostExpensiveModel.name}
                 subValue={
                   <span>
                     ${miniCardData.mostExpensiveModel.cost.toLocaleString()}
                     {miniCardData.mostExpensiveModel.secondary && (
                       <>
-                        <span className="text-zinc-600 mx-1">•</span>
+                        <span className="text-[hsl(var(--text-disabled))] mx-1">•</span>
                         {miniCardData.mostExpensiveModel.secondary.name} ${miniCardData.mostExpensiveModel.secondary.cost.toLocaleString()}
                       </>
                     )}
@@ -634,16 +635,16 @@ export default function CostsPage() {
               <MiniCard
                 icon={Zap}
                 label="Avg Cost / Execution"
-                iconColor="bg-amber-500/20 text-amber-400"
+                iconColor="bg-[hsl(var(--warning))]/20 text-[hsl(var(--warning))]"
                 value={`$${miniCardData.avgCostPerExecution.toFixed(3)}`}
                 className="animate-fade-in-up stagger-3"
               />
               <MiniCard
                 icon={PiggyBank}
                 label="Est. Monthly Savings"
-                iconColor="bg-emerald-500/20 text-emerald-400"
+                iconColor="bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]"
                 value={
-                  <span className="text-emerald-400">
+                  <span className="text-[hsl(var(--success))]">
                     $<CountUp value={miniCardData.estimatedSavings} decimals={0} />
                   </span>
                 }
@@ -666,12 +667,12 @@ export default function CostsPage() {
                     </div>
                     <div className="flex items-center gap-3 text-xs">
                       <div className="flex items-center gap-1.5">
-                        <div className="w-3 h-3 rounded-sm bg-blue-500" />
-                        <span className="text-zinc-500">Actual</span>
+                        <div className="w-3 h-3 rounded-sm bg-[hsl(var(--chart-1))]" />
+                        <span className="text-[hsl(var(--text-muted))]">Actual</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <div className="w-6 h-0 border-t-2 border-dashed border-zinc-500" />
-                        <span className="text-zinc-500">Budget</span>
+                        <div className="w-6 h-0 border-t-2 border-dashed border-[hsl(var(--text-muted))]" />
+                        <span className="text-[hsl(var(--text-muted))]">Budget</span>
                       </div>
                     </div>
                   </div>
@@ -680,26 +681,26 @@ export default function CostsPage() {
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={displayData.dailyCosts} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(240 4% 16%)" vertical={false} />
                         <XAxis
                           dataKey="date"
-                          tick={{ fill: "#71717a", fontSize: 11 }}
+                          tick={{ fill: "hsl(240 4% 46%)", fontSize: 11 }}
                           tickLine={false}
-                          axisLine={{ stroke: "#27272a" }}
+                          axisLine={{ stroke: "hsl(240 4% 16%)" }}
                         />
                         <YAxis
-                          tick={{ fill: "#71717a", fontSize: 11 }}
+                          tick={{ fill: "hsl(240 4% 46%)", fontSize: 11 }}
                           tickLine={false}
                           axisLine={false}
                           tickFormatter={(v) => `$${v}`}
                         />
                         <Tooltip content={<CostTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
-                        <ReferenceLine y={budget} stroke="#71717a" strokeDasharray="6 4" strokeWidth={2} />
+                        <ReferenceLine y={budget} stroke="hsl(240 4% 46%)" strokeDasharray="6 4" strokeWidth={2} />
                         <Bar dataKey="cost" radius={[4, 4, 0, 0]} maxBarSize={40}>
                           {displayData.dailyCosts.map((entry, index) => (
                             <Cell
                               key={`cell-${index}`}
-                              fill={entry.cost > entry.budget ? "#ef4444" : "#3b82f6"}
+                              fill={entry.cost > entry.budget ? "hsl(0 84% 60%)" : "hsl(238 84% 64%)"}
                             />
                           ))}
                         </Bar>
@@ -728,7 +729,7 @@ export default function CostsPage() {
                         data={flattenedTreemap}
                         dataKey="size"
                         aspectRatio={4 / 3}
-                        stroke="#27272a"
+                        stroke="hsl(240 4% 16%)"
                         content={<TreemapContent x={0} y={0} width={0} height={0} name="" size={0} efficiency={0} />}
                       />
                     </ResponsiveContainer>
@@ -741,7 +742,7 @@ export default function CostsPage() {
             <Card className="animate-fade-in-up stagger-6">
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
-                  <Lightbulb className="h-5 w-5 text-amber-400" />
+                  <Lightbulb className="h-5 w-5 text-[hsl(var(--warning))]" />
                   <CardTitle className="text-base font-medium">What If? Model Router Calculator</CardTitle>
                 </div>
                 <CardDescription className="text-xs">
@@ -751,26 +752,26 @@ export default function CostsPage() {
               <CardContent className="pt-0">
                 <div className="grid md:grid-cols-2 gap-6">
                   {/* Current State */}
-                  <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-5">
+                  <div className="rounded-lg border border-[hsl(var(--border-default))] bg-[hsl(var(--bg-surface))]/30 p-5">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-sm font-semibold text-zinc-300">Current Setup</h3>
-                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded">
+                      <h3 className="text-sm font-semibold text-[hsl(var(--text-secondary))]">Current Setup</h3>
+                      <span className="text-xs text-[hsl(var(--text-muted))] bg-[hsl(var(--bg-hover))] px-2 py-0.5 rounded">
                         {modelComparison.current.model}
                       </span>
                     </div>
-                    <div className="text-3xl font-bold text-zinc-100 mb-4">
-                      ${modelComparison.current.monthlyTotal.toLocaleString()}<span className="text-sm font-normal text-zinc-500">/month</span>
+                    <div className="text-3xl font-bold text-[hsl(var(--text-primary))] mb-4">
+                      ${modelComparison.current.monthlyTotal.toLocaleString()}<span className="text-sm font-normal text-[hsl(var(--text-muted))]">/month</span>
                     </div>
                     <div className="space-y-3">
                       {modelComparison.current.breakdown.map((item) => (
                         <div key={item.task}>
                           <div className="flex items-center justify-between text-xs mb-1">
-                            <span className="text-zinc-400">{item.task}</span>
-                            <span className="text-zinc-300 tabular-nums">${item.cost.toFixed(2)}</span>
+                            <span className="text-[hsl(var(--text-muted))]">{item.task}</span>
+                            <span className="text-[hsl(var(--text-secondary))] tabular-nums">${item.cost.toFixed(2)}</span>
                           </div>
-                          <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                          <div className="h-1.5 bg-[hsl(var(--bg-hover))] rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-zinc-600 rounded-full"
+                              className="h-full bg-[hsl(var(--text-disabled))] rounded-full"
                               style={{ width: `${item.percentage}%` }}
                             />
                           </div>
@@ -780,21 +781,21 @@ export default function CostsPage() {
                   </div>
 
                   {/* Suggested State */}
-                  <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-5 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-semibold px-2 py-0.5 rounded-bl">
+                  <div className="rounded-lg border border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/5 p-5 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 bg-[hsl(var(--success))] text-[hsl(var(--bg-base))] text-[10px] font-semibold px-2 py-0.5 rounded-bl">
                       RECOMMENDED
                     </div>
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-sm font-semibold text-emerald-400">Optimized Setup</h3>
-                      <span className="text-xs text-emerald-400/70 bg-emerald-500/20 px-2 py-0.5 rounded">
+                      <h3 className="text-sm font-semibold text-[hsl(var(--success))]">Optimized Setup</h3>
+                      <span className="text-xs text-[hsl(var(--success))]/70 bg-[hsl(var(--success))]/20 px-2 py-0.5 rounded">
                         {modelComparison.suggested.model}
                       </span>
                     </div>
                     <div className="flex items-baseline gap-3 mb-4">
-                      <span className="text-3xl font-bold text-emerald-400">
-                        ${modelComparison.suggested.monthlyTotal.toLocaleString()}<span className="text-sm font-normal text-emerald-400/70">/month</span>
+                      <span className="text-3xl font-bold text-[hsl(var(--success))]">
+                        ${modelComparison.suggested.monthlyTotal.toLocaleString()}<span className="text-sm font-normal text-[hsl(var(--success))]/70">/month</span>
                       </span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-sm font-semibold">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[hsl(var(--success))]/20 text-[hsl(var(--success))] text-sm font-semibold">
                         <ArrowDownRight className="w-3.5 h-3.5" />
                         Save ${modelComparison.suggested.savings.toLocaleString()} ({modelComparison.suggested.savingsPercent}%)
                       </span>
@@ -803,26 +804,26 @@ export default function CostsPage() {
                       {modelComparison.suggested.breakdown.map((item) => (
                         <div key={item.task}>
                           <div className="flex items-center justify-between text-xs mb-1">
-                            <span className="text-zinc-400">{item.task}</span>
+                            <span className="text-[hsl(var(--text-muted))]">{item.task}</span>
                             <div className="flex items-center gap-2">
-                              <span className="text-zinc-300 tabular-nums">${item.cost.toFixed(2)}</span>
+                              <span className="text-[hsl(var(--text-secondary))] tabular-nums">${item.cost.toFixed(2)}</span>
                               {item.savings > 0 && (
-                                <span className="text-emerald-400 text-[10px]">
+                                <span className="text-[hsl(var(--success))] text-[10px]">
                                   -${item.savings.toFixed(0)}
                                 </span>
                               )}
                             </div>
                           </div>
-                          <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                          <div className="h-1.5 bg-[hsl(var(--bg-hover))] rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-emerald-500 rounded-full"
+                              className="h-full bg-[hsl(var(--success))] rounded-full"
                               style={{ width: `${item.percentage}%` }}
                             />
                           </div>
                         </div>
                       ))}
                     </div>
-                    <Button className="w-full mt-4 gap-2 bg-emerald-600 hover:bg-emerald-700">
+                    <Button className="w-full mt-4 gap-2 bg-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/90 text-[hsl(var(--bg-base))]">
                       <CheckCircle2 className="w-4 h-4" />
                       Apply Recommendation
                       <ChevronRight className="w-4 h-4 ml-auto" />
